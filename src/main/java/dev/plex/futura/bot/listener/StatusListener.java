@@ -8,10 +8,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-/**
- * @author Taah
- * @since 8:34 PM [01-27-2024]
- */
 public class StatusListener implements Listener
 {
     @EventHandler

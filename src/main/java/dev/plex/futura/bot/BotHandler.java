@@ -9,10 +9,6 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.bukkit.Bukkit;
 
-/**
- * @author Taah
- * @since 7:01 PM [01-25-2024]
- */
 public class BotHandler
 {
     private final JDA jda;

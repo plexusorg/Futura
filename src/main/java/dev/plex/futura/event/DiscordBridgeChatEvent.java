@@ -8,12 +8,6 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-import java.security.Guard;
-
-/**
- * @author Taah
- * @since 8:49 PM [01-27-2024]
- */
 public class DiscordBridgeChatEvent extends Event implements Cancellable
 {
     private final HandlerList HANDLER_LIST = new HandlerList();
@@ -66,7 +60,8 @@ public class DiscordBridgeChatEvent extends Event implements Cancellable
         this.cancelled = cancel;
     }
 
-    public enum BridgeType {
+    public enum BridgeType
+    {
         DISCORD_TO_MINECRAFT,
         MINECRAFT_TO_DISCORD
     }

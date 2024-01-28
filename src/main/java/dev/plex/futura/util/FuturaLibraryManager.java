@@ -16,10 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-/**
- * @author Taah
- * @since 8:26 PM [01-27-2024]
- */
 public class FuturaLibraryManager implements PluginLoader
 {
     @Override
