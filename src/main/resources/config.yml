@@ -1,0 +1,20 @@
+bot:
+  # Or you can also specify a property or environment variable in your JVM called BOT_TOKEN
+  token: ""
+  status: "Playing on TotalFreedom with %players% players!"
+
+discord:
+  # Channel for chat bridge between discord and minecraft
+  chat: ""
+  #
+  linking:
+    enabled: false
+    # You can leave this blank for no role to be given on linking
+    role: ""
+  # Roles sync if LuckPerms is on the server only
+  # Correct way to add roles to sync is:
+  # roles:
+  #   sync: true
+  #   luckpermsGroupName: "discordRoleId"
+  roles:
+    sync: false

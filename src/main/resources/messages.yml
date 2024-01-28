@@ -1,0 +1,8 @@
+minecraftToDiscord: "%prefix% **%username%**: %message%"
+discordToMinecraft: "<dark_purple>[<light_purple>Discord<dark_purple>] %role-color% [%role%] <reset>%username%: %message%"
+
+joinServer: "**%player% has joined the server!"
+leftServer: "**%player% has left the server!"
+
+serverOffline: ":octagonal_sign: **Server is now offline!**"
+serverOnline: ":white_check_mark: **Server is now online!**"
