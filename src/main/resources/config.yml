@@ -9,6 +9,8 @@ discord:
   #
   linking:
     enabled: false
+    # Time in seconds the code will be valid for until it expires and a new one will have to be requested for
+    expirationTime: 60
     # You can leave this blank for no role to be given on linking
     role: ""
   # Roles sync if LuckPerms is on the server only
@@ -18,3 +20,13 @@ discord:
   #   luckpermsGroupName: "discordRoleId"
   roles:
     sync: false
+
+  database:
+    # sqlite, mysql
+    type: sqlite
+    auth:
+      user: ""
+      password: ""
+      host: ""
+      port: 3306
+      database: ""

@@ -6,3 +6,8 @@ leftServer: "**%player% has left the server!"
 
 serverOffline: ":octagonal_sign: **Server is now offline!**"
 serverOnline: ":white_check_mark: **Server is now online!**"
+
+
+linkingDisabled: "<red>Discord to Minecraft account linking is currently disabled."
+accountLinkingInProgress: "<red>Can't request a new code currently, user has already requested a code. Please try again in a minute."
+codeRequested: "<green>The code you have requested is %code%. Please do not share this. In order to link your account, message the %bot-name% bot with your code. This code will expire in %expiration-time% seconds."

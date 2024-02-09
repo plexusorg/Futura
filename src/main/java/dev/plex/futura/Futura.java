@@ -1,6 +1,8 @@
 package dev.plex.futura;
 
 import dev.plex.futura.bot.BotHandler;
+import dev.plex.futura.bot.linking.LinkingManager;
+import dev.plex.futura.bot.listener.LinkingListener;
 import dev.plex.futura.config.Config;
 import dev.plex.futura.listener.ChatListener;
 import org.bstats.bukkit.Metrics;
@@ -13,6 +15,7 @@ public final class Futura extends JavaPlugin
     private static Futura plugin;
 
     private BotHandler botHandler;
+    private LinkingManager linkingManager;
 
     public Config config;
     public Config messages;
@@ -31,6 +34,7 @@ public final class Futura extends JavaPlugin
             this.saveResource("messages.yml", false);
         }
         botHandler = new BotHandler();
+        linkingManager = new LinkingManager();
     }
 
     @Override
@@ -43,6 +47,7 @@ public final class Futura extends JavaPlugin
         if (this.botHandler.ready())
         {
             this.botHandler.jda().addEventListener(chatListener);
+            this.botHandler.jda().addEventListener(new LinkingListener());
         }
 
         // Metrics @ https://bstats.org/plugin/bukkit/Futura/20848
@@ -62,5 +67,10 @@ public final class Futura extends JavaPlugin
     public BotHandler botHandler()
     {
         return this.botHandler;
+    }
+
+    public LinkingManager linkingManager()
+    {
+        return this.linkingManager;
     }
 }
