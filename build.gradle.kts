@@ -2,7 +2,7 @@ plugins {
     id("java")
     `maven-publish`
     id("net.minecrell.plugin-yml.paper") version "0.6.0"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.3"
 }
 
 group = "dev.plex"
@@ -22,12 +22,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
-    library("net.dv8tion:JDA:5.0.0-beta.20") {
+    compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    library("net.dv8tion:JDA:5.1.2") {
         exclude(module = "opus-java")
     }
-    implementation("org.bstats:bstats-base:3.0.2")
-    implementation("org.bstats:bstats-bukkit:3.0.2")
+    implementation("org.bstats:bstats-base:3.1.0")
+    implementation("org.bstats:bstats-bukkit:3.1.0")
 }
 
 paper {
@@ -43,7 +43,7 @@ paper {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 tasks {
