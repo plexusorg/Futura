@@ -97,11 +97,17 @@ public record BridgeSettings(
     private static ConsoleRoute consoleRoute(ConfigurationSection config)
     {
         String path = "channels.console";
+        String permission = config.getString(path + ".permission", "plex.discord.console").trim();
+        if (permission.isBlank())
+        {
+            permission = "plex.discord.console";
+        }
         return new ConsoleRoute(
                 config.getString(path + ".id", "").trim(),
                 config.getString(path + ".fallback-name", "console").trim(),
                 config.getBoolean(path + ".server-output-to-discord", false),
                 config.getBoolean(path + ".discord-to-server-commands", false),
+                permission,
                 Math.clamp(config.getLong(path + ".output.batch-interval-ms", 1_000L), 250L, 10_000L),
                 Math.clamp(config.getInt(path + ".output.max-lines-per-batch", 50), 1, 100),
                 Math.clamp(config.getInt(path + ".output.max-queued-lines", 500), 50, 5_000));
@@ -122,6 +128,7 @@ public record BridgeSettings(
             String fallbackName,
             boolean serverOutputToDiscord,
             boolean discordToServerCommands,
+            String permission,
             long batchIntervalMillis,
             int maxLinesPerBatch,
             int maxQueuedLines)

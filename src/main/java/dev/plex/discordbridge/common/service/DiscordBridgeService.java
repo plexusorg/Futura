@@ -27,6 +27,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -419,41 +420,58 @@ public final class DiscordBridgeService extends ListenerAdapter
         }
 
         String finalCommand = command;
-        platform.executeGlobal(() -> platform.onlinePlayer(link.minecraftId()).ifPresentOrElse(
-                player -> platform.executeEntity(player, () ->
+        platform.executeGlobal(() ->
+        {
+            OfflinePermissionResolver.Result permissionResult;
+            try
+            {
+                permissionResult = OfflinePermissionResolver.check(
+                        link.minecraftId(),
+                        settings.console().permission());
+            }
+            catch (LinkageError exception)
+            {
+                permissionResult = OfflinePermissionResolver.Result.PROVIDER_UNAVAILABLE;
+            }
+
+            if (permissionResult == OfflinePermissionResolver.Result.PROVIDER_UNAVAILABLE)
+            {
+                sendConsoleControl("⛔ Command denied: no Vault-compatible offline permission provider is available.");
+                return;
+            }
+            if (permissionResult == OfflinePermissionResolver.Result.DENIED)
+            {
+                sendConsoleControl("⛔ Command denied: **" + MarkdownSanitizer.escape(link.minecraftName())
+                        + "** does not have `" + MarkdownSanitizer.escape(settings.console().permission()) + "`.");
+                return;
+            }
+
+            platform.info("[Discord Console] {0} issued /{1}", link.minecraftName(), finalCommand);
+            if (!settings.console().serverOutputToDiscord())
+            {
+                sendConsoleControl("▶ **" + MarkdownSanitizer.escape(link.minecraftName())
+                        + "** issued `" + MarkdownSanitizer.escape(finalCommand) + "`");
+            }
+            try
+            {
+                boolean accepted = Bukkit.dispatchCommand(
+                        LinkedConsoleCommandSender.create(link.minecraftName()),
+                        finalCommand);
+                if (!accepted)
                 {
-                    if (!player.isOnline())
-                    {
-                        sendConsoleControl("⛔ Command denied: **" + MarkdownSanitizer.escape(link.minecraftName())
-                                + "** must be online.");
-                        return;
-                    }
-                    platform.info("[Discord Console] {0} issued /{1}", player.getName(), finalCommand);
-                    if (!settings.console().serverOutputToDiscord())
-                    {
-                        sendConsoleControl("▶ **" + MarkdownSanitizer.escape(player.getName())
-                                + "** issued `" + MarkdownSanitizer.escape(finalCommand) + "`");
-                    }
-                    try
-                    {
-                        boolean accepted = player.performCommand(finalCommand);
-                        if (!accepted)
-                        {
-                            sendConsoleControl("⚠️ **" + MarkdownSanitizer.escape(player.getName())
-                                    + "** attempted an unknown or rejected command.");
-                        }
-                    }
-                    catch (RuntimeException exception)
-                    {
-                        platform.error(
-                                "A Discord console command from {0} failed: {1}",
-                                player.getName(),
-                                safeError(exception));
-                        sendConsoleControl("⛔ Command execution failed; check the server console.");
-                    }
-                }),
-                () -> sendConsoleControl("⛔ Command denied: **" + MarkdownSanitizer.escape(link.minecraftName())
-                        + "** must be online.")));
+                    sendConsoleControl("⚠️ **" + MarkdownSanitizer.escape(link.minecraftName())
+                            + "** attempted an unknown or rejected command.");
+                }
+            }
+            catch (RuntimeException exception)
+            {
+                platform.error(
+                        "A Discord console command from {0} failed: {1}",
+                        link.minecraftName(),
+                        safeError(exception));
+                sendConsoleControl("⛔ Command execution failed; check the server console.");
+            }
+        });
     }
 
     private void sendConsoleOutput(String output)

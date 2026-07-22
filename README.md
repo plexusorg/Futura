@@ -111,12 +111,16 @@ and `discord-to-server-commands`. Server output is sent in bounded batches to
 avoid flooding Discord during log bursts.
 
 A Discord command is accepted only when its author has a stored account link
-and the linked Minecraft player is currently online. The command is dispatched
-as that real player, so Minecraft sees the player's current name and applies
-their normal permissions. It never executes with console privileges and does
-not create a fake console sender. Command responses intended for the sender are
-therefore shown to the player in Minecraft; the Discord channel receives the
-normal server console/log stream.
+and the linked Minecraft UUID has the configured permission, which defaults to
+`plex.discord.console`. The player does not need to be online. Offline checks
+use the server's Vault-compatible permissions provider.
+
+Authorized commands execute with console capability through a sender named
+after the linked Minecraft account, so command logs and audit messages identify
+the account instead of `CONSOLE`. Granting `plex.discord.console` is therefore
+equivalent to granting console access from the configured Discord channel.
+Command feedback written to the console is included in the normal Discord log
+stream when output relay is enabled.
 
 Treat this channel as sensitive. Server logs can contain addresses, plugin
 errors, configuration values, and other operational details, so Discord access

@@ -9,6 +9,9 @@ repositories {
     maven {
         url = uri("https://nexus.telesphoreo.me/repository/plex/")
     }
+    maven {
+        url = uri("https://jitpack.io")
+    }
     mavenCentral()
 }
 
@@ -22,6 +25,9 @@ dependencies {
     compileOnly("org.mariadb.jdbc:mariadb-java-client:3.5.9")
     compileOnly("org.postgresql:postgresql:42.7.13")
     compileOnly("org.apache.logging.log4j:log4j-core:2.25.4")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1") {
+        exclude("org.bukkit", "bukkit")
+    }
 
 }
 

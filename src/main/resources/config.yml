@@ -35,14 +35,16 @@ channels:
 
   console:
     # Highly privileged integration. Discord users must have a linked account,
-    # and that Minecraft player must be online. Commands run as the real player
-    # with that player's permissions; this never grants console privileges.
+    # and that Minecraft UUID must have this permission. The player may be
+    # offline. Grant it explicitly through your Vault-compatible permissions
+    # plugin; it authorizes console-level command execution from Discord.
     # Restrict this Discord channel to people trusted with server log access;
     # console output can contain IP addresses, plugin errors, or other secrets.
     id: ""
     fallback-name: "console"
     server-output-to-discord: false
     discord-to-server-commands: false
+    permission: "plex.discord.console"
 
     # Console lines are batched to avoid Discord rate limits during log bursts.
     output:

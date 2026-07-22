@@ -6,6 +6,8 @@ api-version: '26.1'
 folia-supported: true
 authors:
   - Plexus
+softdepend:
+  - Vault
 
 libraries:
   - net.dv8tion:JDA:6.5.0
@@ -24,3 +26,8 @@ commands:
   discordlinkadmin:
     description: Manage Discord account links from the server console
     usage: /discordlinkadmin <list | lookup | code | link | unlink> ...
+
+permissions:
+  plex.discord.console:
+    description: Allows a linked Minecraft account to issue console commands from Discord
+    default: false
