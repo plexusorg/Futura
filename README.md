@@ -16,6 +16,8 @@ Minecraft and Discord using JDA.
 - Persistent Minecraft-to-Discord links using expiring one-time codes.
 - A native Dialog API account dashboard with live Discord display names and
   MiniMessage hex styling from each member's highest colored role.
+- An opt-in, batched Discord console channel with linked-player command
+  execution and live server log output.
 - A console-only account-link administration command.
 
 ## Build
@@ -100,6 +102,25 @@ The console-only `/discordlinkadmin` command supports:
 
 Plex registers the administrative command with a console-only command source,
 so it is unavailable to players even if they have operator permissions.
+
+## Discord console channel
+
+The `channels.console` route is disabled by default. Set its channel ID (or a
+unique fallback name), then independently enable `server-output-to-discord`
+and `discord-to-server-commands`. Server output is sent in bounded batches to
+avoid flooding Discord during log bursts.
+
+A Discord command is accepted only when its author has a stored account link
+and the linked Minecraft player is currently online. The command is dispatched
+as that real player, so Minecraft sees the player's current name and applies
+their normal permissions. It never executes with console privileges and does
+not create a fake console sender. Command responses intended for the sender are
+therefore shown to the player in Minecraft; the Discord channel receives the
+normal server console/log stream.
+
+Treat this channel as sensitive. Server logs can contain addresses, plugin
+errors, configuration values, and other operational details, so Discord access
+should be limited to trusted staff.
 
 ## Plex staff-chat API
 

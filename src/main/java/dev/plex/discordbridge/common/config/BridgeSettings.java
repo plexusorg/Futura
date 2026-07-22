@@ -11,6 +11,7 @@ public record BridgeSettings(
         String guildId,
         Route chat,
         Route staffChat,
+        ConsoleRoute console,
         boolean ignoreBots,
         boolean ignoreWebhooks,
         boolean includeAttachments,
@@ -30,6 +31,7 @@ public record BridgeSettings(
                 config.getString("guild-id", "").trim(),
                 route(config, "channels.chat"),
                 route(config, "channels.staff-chat"),
+                consoleRoute(config),
                 config.getBoolean("discord.ignore-bots", true),
                 config.getBoolean("discord.ignore-webhooks", true),
                 config.getBoolean("discord.include-attachments", true),
@@ -92,6 +94,19 @@ public record BridgeSettings(
                 config.getBoolean(path + ".send-to-console", true));
     }
 
+    private static ConsoleRoute consoleRoute(ConfigurationSection config)
+    {
+        String path = "channels.console";
+        return new ConsoleRoute(
+                config.getString(path + ".id", "").trim(),
+                config.getString(path + ".fallback-name", "console").trim(),
+                config.getBoolean(path + ".server-output-to-discord", false),
+                config.getBoolean(path + ".discord-to-server-commands", false),
+                Math.clamp(config.getLong(path + ".output.batch-interval-ms", 1_000L), 250L, 10_000L),
+                Math.clamp(config.getInt(path + ".output.max-lines-per-batch", 50), 1, 100),
+                Math.clamp(config.getInt(path + ".output.max-queued-lines", 500), 50, 5_000));
+    }
+
     public record Route(
             String channelId,
             String fallbackName,
@@ -100,6 +115,21 @@ public record BridgeSettings(
             String receivePermission,
             boolean sendToConsole)
     {
+    }
+
+    public record ConsoleRoute(
+            String channelId,
+            String fallbackName,
+            boolean serverOutputToDiscord,
+            boolean discordToServerCommands,
+            long batchIntervalMillis,
+            int maxLinesPerBatch,
+            int maxQueuedLines)
+    {
+        public boolean enabled()
+        {
+            return serverOutputToDiscord || discordToServerCommands;
+        }
     }
 
     public record Lifecycle(

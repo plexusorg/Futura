@@ -33,6 +33,23 @@ channels:
     receive-permission: "plex.adminchat"
     send-to-console: true
 
+  console:
+    # Highly privileged integration. Discord users must have a linked account,
+    # and that Minecraft player must be online. Commands run as the real player
+    # with that player's permissions; this never grants console privileges.
+    # Restrict this Discord channel to people trusted with server log access;
+    # console output can contain IP addresses, plugin errors, or other secrets.
+    id: ""
+    fallback-name: "console"
+    server-output-to-discord: false
+    discord-to-server-commands: false
+
+    # Console lines are batched to avoid Discord rate limits during log bursts.
+    output:
+      batch-interval-ms: 1000
+      max-lines-per-batch: 50
+      max-queued-lines: 500
+
 discord:
   # Ignoring bot/webhook authors prevents relay loops.
   ignore-bots: true

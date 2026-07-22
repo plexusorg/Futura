@@ -40,6 +40,8 @@ public final class DiscordBridgeService extends ListenerAdapter
     private volatile JDA jda;
     private volatile TextChannel chatChannel;
     private volatile TextChannel staffChannel;
+    private volatile TextChannel consoleChannel;
+    private volatile ConsoleLogRelay consoleRelay;
 
     public DiscordBridgeService(BridgePlatform platform, BridgeSettings settings, LinkService links)
     {
@@ -74,10 +76,17 @@ public final class DiscordBridgeService extends ListenerAdapter
 
     public void stop()
     {
+        ConsoleLogRelay relay = consoleRelay;
+        consoleRelay = null;
+        if (relay != null)
+        {
+            relay.close();
+        }
         sendStoppedMessage();
         stopping.set(true);
         chatChannel = null;
         staffChannel = null;
+        consoleChannel = null;
         JDA current = jda;
         jda = null;
         if (current != null)
@@ -96,6 +105,19 @@ public final class DiscordBridgeService extends ListenerAdapter
         }
         chatChannel = resolveChannel(event.getJDA(), "public chat", settings.chat());
         staffChannel = resolveChannel(event.getJDA(), "staff chat", settings.staffChat());
+        if (settings.console().enabled())
+        {
+            consoleChannel = resolveChannel(
+                    event.getJDA(),
+                    "console",
+                    settings.console().channelId(),
+                    settings.console().fallbackName(),
+                    true);
+            if (consoleChannel != null && settings.console().serverOutputToDiscord())
+            {
+                consoleRelay = ConsoleLogRelay.attach(settings.console(), this::sendConsoleOutput);
+            }
+        }
         platform.info("Discord bot connected as {0}", event.getJDA().getSelfUser().getName());
         sendLifecycleMessage(settings.lifecycle().started());
     }
@@ -118,6 +140,14 @@ public final class DiscordBridgeService extends ListenerAdapter
         }
         if (settings.ignoreWebhooks() && event.getMessage().isWebhookMessage())
         {
+            return;
+        }
+        if (sameChannel(event.getChannel().getIdLong(), consoleChannel))
+        {
+            if (settings.console().discordToServerCommands())
+            {
+                handleConsoleCommand(event);
+            }
             return;
         }
 
@@ -221,12 +251,27 @@ public final class DiscordBridgeService extends ListenerAdapter
 
     private TextChannel resolveChannel(JDA jda, String routeName, BridgeSettings.Route route)
     {
+        return resolveChannel(
+                jda,
+                routeName,
+                route.channelId(),
+                route.fallbackName(),
+                route.minecraftToDiscord());
+    }
+
+    private TextChannel resolveChannel(
+            JDA jda,
+            String routeName,
+            String channelId,
+            String fallbackName,
+            boolean needsSendPermission)
+    {
         TextChannel byId = null;
-        if (!route.channelId().isBlank())
+        if (!channelId.isBlank())
         {
             try
             {
-                byId = jda.getTextChannelById(route.channelId());
+                byId = jda.getTextChannelById(channelId);
             }
             catch (IllegalArgumentException exception)
             {
@@ -239,11 +284,11 @@ public final class DiscordBridgeService extends ListenerAdapter
         }
         if (byId != null)
         {
-            logResolved(routeName, byId, route);
+            logResolved(routeName, byId, needsSendPermission);
             return byId;
         }
 
-        if (route.fallbackName().isBlank())
+        if (fallbackName.isBlank())
         {
             platform.warn("Discord {0} route is unavailable: no usable channel ID or fallback name", routeName);
             return null;
@@ -266,11 +311,11 @@ public final class DiscordBridgeService extends ListenerAdapter
                 platform.warn("Discord {0} fallback failed because guild-id was not found", routeName);
                 return null;
             }
-            matches = guild.getTextChannelsByName(route.fallbackName(), false);
+            matches = guild.getTextChannelsByName(fallbackName, false);
         }
         else
         {
-            matches = jda.getTextChannelsByName(route.fallbackName(), false);
+            matches = jda.getTextChannelsByName(fallbackName, false);
         }
 
         if (matches.size() != 1)
@@ -278,24 +323,24 @@ public final class DiscordBridgeService extends ListenerAdapter
             platform.warn(
                     "Discord {0} fallback name ''{1}'' matched {2} channels; the route is disabled",
                     routeName,
-                    route.fallbackName(),
+                    fallbackName,
                     matches.size());
             return null;
         }
 
         TextChannel resolved = matches.getFirst();
-        logResolved(routeName, resolved, route);
+        logResolved(routeName, resolved, needsSendPermission);
         return resolved;
     }
 
-    private void logResolved(String routeName, TextChannel channel, BridgeSettings.Route route)
+    private void logResolved(String routeName, TextChannel channel, boolean needsSendPermission)
     {
         platform.info(
                 "Discord {0} route resolved to #{1} ({2})",
                 routeName,
                 channel.getName(),
                 channel.getId());
-        if (route.minecraftToDiscord() && !channel.canTalk())
+        if (needsSendPermission && !channel.canTalk())
         {
             platform.warn("The bot cannot send messages in the Discord {0} channel", routeName);
         }
@@ -347,6 +392,94 @@ public final class DiscordBridgeService extends ListenerAdapter
         {
             notifyLinkedPlayer(result.link());
         }
+    }
+
+    private void handleConsoleCommand(MessageReceivedEvent event)
+    {
+        String command = event.getMessage().getContentRaw().trim();
+        if (command.startsWith("/"))
+        {
+            command = command.substring(1).trim();
+        }
+        if (command.isBlank())
+        {
+            return;
+        }
+        if (command.indexOf('\n') >= 0 || command.indexOf('\r') >= 0)
+        {
+            sendConsoleControl("⛔ Command denied: commands must contain exactly one line.");
+            return;
+        }
+
+        AccountLink link = links.byDiscord(event.getAuthor().getId()).orElse(null);
+        if (link == null)
+        {
+            sendConsoleControl("⛔ Command denied: your Discord account is not linked to Minecraft.");
+            return;
+        }
+
+        String finalCommand = command;
+        platform.executeGlobal(() -> platform.onlinePlayer(link.minecraftId()).ifPresentOrElse(
+                player -> platform.executeEntity(player, () ->
+                {
+                    if (!player.isOnline())
+                    {
+                        sendConsoleControl("⛔ Command denied: **" + MarkdownSanitizer.escape(link.minecraftName())
+                                + "** must be online.");
+                        return;
+                    }
+                    platform.info("[Discord Console] {0} issued /{1}", player.getName(), finalCommand);
+                    if (!settings.console().serverOutputToDiscord())
+                    {
+                        sendConsoleControl("▶ **" + MarkdownSanitizer.escape(player.getName())
+                                + "** issued `" + MarkdownSanitizer.escape(finalCommand) + "`");
+                    }
+                    try
+                    {
+                        boolean accepted = player.performCommand(finalCommand);
+                        if (!accepted)
+                        {
+                            sendConsoleControl("⚠️ **" + MarkdownSanitizer.escape(player.getName())
+                                    + "** attempted an unknown or rejected command.");
+                        }
+                    }
+                    catch (RuntimeException exception)
+                    {
+                        platform.error(
+                                "A Discord console command from {0} failed: {1}",
+                                player.getName(),
+                                safeError(exception));
+                        sendConsoleControl("⛔ Command execution failed; check the server console.");
+                    }
+                }),
+                () -> sendConsoleControl("⛔ Command denied: **" + MarkdownSanitizer.escape(link.minecraftName())
+                        + "** must be online.")));
+    }
+
+    private void sendConsoleOutput(String output)
+    {
+        TextChannel channel = consoleChannel;
+        if (channel == null || stopping.get() || !channel.canTalk())
+        {
+            return;
+        }
+        String safeOutput = output.replace("```", "`\u200B``");
+        String content = "```ansi\n" + truncate(safeOutput, Message.MAX_CONTENT_LENGTH - 13) + "\n```";
+        channel.sendMessage(content)
+                .setAllowedMentions(Collections.emptySet())
+                .queue(null, failure -> { });
+    }
+
+    private void sendConsoleControl(String message)
+    {
+        TextChannel channel = consoleChannel;
+        if (channel == null || stopping.get() || !channel.canTalk())
+        {
+            return;
+        }
+        channel.sendMessage(truncate(message, Message.MAX_CONTENT_LENGTH))
+                .setAllowedMentions(Collections.emptySet())
+                .queue(null, failure -> { });
     }
 
     private void notifyLinkedPlayer(AccountLink link)

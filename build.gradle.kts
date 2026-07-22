@@ -21,6 +21,7 @@ dependencies {
     compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
     compileOnly("org.mariadb.jdbc:mariadb-java-client:3.5.9")
     compileOnly("org.postgresql:postgresql:42.7.13")
+    compileOnly("org.apache.logging.log4j:log4j-core:2.25.4")
 
 }
 
