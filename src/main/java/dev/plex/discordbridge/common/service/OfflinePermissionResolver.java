@@ -4,10 +4,12 @@ import java.util.UUID;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-/** Resolves a permission for an online or offline Minecraft UUID through Bukkit/Vault. */
+/**
+ * Resolves a permission for a Minecraft UUID through Vault.
+ * This lookup can load an offline user and must only be called asynchronously.
+ */
 public final class OfflinePermissionResolver
 {
     private OfflinePermissionResolver()
@@ -16,12 +18,6 @@ public final class OfflinePermissionResolver
 
     public static Result check(UUID minecraftId, String permission)
     {
-        Player online = Bukkit.getPlayer(minecraftId);
-        if (online != null)
-        {
-            return online.hasPermission(permission) ? Result.GRANTED : Result.DENIED;
-        }
-
         try
         {
             RegisteredServiceProvider<Permission> registration =
@@ -35,7 +31,7 @@ public final class OfflinePermissionResolver
                     ? Result.GRANTED
                     : Result.DENIED;
         }
-        catch (LinkageError exception)
+        catch (RuntimeException | LinkageError exception)
         {
             return Result.PROVIDER_UNAVAILABLE;
         }

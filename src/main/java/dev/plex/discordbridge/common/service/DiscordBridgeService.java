@@ -420,19 +420,11 @@ public final class DiscordBridgeService extends ListenerAdapter
         }
 
         String finalCommand = command;
-        platform.executeGlobal(() ->
+        platform.executeAsync(() ->
         {
-            OfflinePermissionResolver.Result permissionResult;
-            try
-            {
-                permissionResult = OfflinePermissionResolver.check(
-                        link.minecraftId(),
-                        settings.console().permission());
-            }
-            catch (LinkageError exception)
-            {
-                permissionResult = OfflinePermissionResolver.Result.PROVIDER_UNAVAILABLE;
-            }
+            OfflinePermissionResolver.Result permissionResult = OfflinePermissionResolver.check(
+                    link.minecraftId(),
+                    settings.console().permission());
 
             if (permissionResult == OfflinePermissionResolver.Result.PROVIDER_UNAVAILABLE)
             {
@@ -446,32 +438,37 @@ public final class DiscordBridgeService extends ListenerAdapter
                 return;
             }
 
-            platform.info("[Discord Console] {0} issued /{1}", link.minecraftName(), finalCommand);
-            if (!settings.console().serverOutputToDiscord())
-            {
-                sendConsoleControl("▶ **" + MarkdownSanitizer.escape(link.minecraftName())
-                        + "** issued `" + MarkdownSanitizer.escape(finalCommand) + "`");
-            }
-            try
-            {
-                boolean accepted = Bukkit.dispatchCommand(
-                        LinkedConsoleCommandSender.create(link.minecraftName()),
-                        finalCommand);
-                if (!accepted)
-                {
-                    sendConsoleControl("⚠️ **" + MarkdownSanitizer.escape(link.minecraftName())
-                            + "** attempted an unknown or rejected command.");
-                }
-            }
-            catch (RuntimeException exception)
-            {
-                platform.error(
-                        "A Discord console command from {0} failed: {1}",
-                        link.minecraftName(),
-                        safeError(exception));
-                sendConsoleControl("⛔ Command execution failed; check the server console.");
-            }
+            platform.executeGlobal(() -> executeConsoleCommand(link, finalCommand));
         });
+    }
+
+    private void executeConsoleCommand(AccountLink link, String command)
+    {
+        platform.info("[Discord Console] {0} issued /{1}", link.minecraftName(), command);
+        if (!settings.console().serverOutputToDiscord())
+        {
+            sendConsoleControl("▶ **" + MarkdownSanitizer.escape(link.minecraftName())
+                    + "** issued `" + MarkdownSanitizer.escape(command) + "`");
+        }
+        try
+        {
+            boolean accepted = Bukkit.dispatchCommand(
+                    LinkedConsoleCommandSender.create(link.minecraftName()),
+                    command);
+            if (!accepted)
+            {
+                sendConsoleControl("⚠️ **" + MarkdownSanitizer.escape(link.minecraftName())
+                        + "** attempted an unknown or rejected command.");
+            }
+        }
+        catch (RuntimeException exception)
+        {
+            platform.error(
+                    "A Discord console command from {0} failed: {1}",
+                    link.minecraftName(),
+                    safeError(exception));
+            sendConsoleControl("⛔ Command execution failed; check the server console.");
+        }
     }
 
     private void sendConsoleOutput(String output)

@@ -19,6 +19,8 @@ public interface BridgePlatform
 
     void executeGlobal(Runnable task);
 
+    void executeAsync(Runnable task);
+
     void executeEntity(Player player, Runnable task);
 
     void broadcast(Component message);

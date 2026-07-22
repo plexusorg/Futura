@@ -50,6 +50,12 @@ public final class PlexBridgePlatform implements BridgePlatform
     }
 
     @Override
+    public void executeAsync(Runnable task)
+    {
+        module.api().scheduler().runAsync(task);
+    }
+
+    @Override
     public void executeEntity(Player player, Runnable task)
     {
         module.api().scheduler().executeEntity(player, task, null, 1L);

@@ -52,6 +52,12 @@ public final class StandaloneBridgePlatform implements BridgePlatform
     }
 
     @Override
+    public void executeAsync(Runnable task)
+    {
+        Bukkit.getAsyncScheduler().runNow(plugin, scheduledTask -> task.run());
+    }
+
+    @Override
     public void executeEntity(Player player, Runnable task)
     {
         player.getScheduler().execute(plugin, task, null, 1L);
