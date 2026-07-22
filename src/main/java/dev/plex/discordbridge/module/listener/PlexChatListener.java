@@ -1,6 +1,6 @@
-package dev.plex.discordbridge.listener;
+package dev.plex.discordbridge.module.listener;
 
-import dev.plex.discordbridge.service.DiscordBridgeService;
+import dev.plex.discordbridge.common.service.DiscordBridgeService;
 import dev.plex.api.event.StaffChatMessageEvent;
 import dev.plex.listener.PlexListener;
 import io.papermc.paper.event.player.AsyncChatEvent;

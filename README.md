@@ -14,6 +14,8 @@ Minecraft and Discord using JDA.
 - JDA loaded at runtime by Plex rather than shaded into the module.
 - Configurable server-started and server-stopped Discord messages.
 - Persistent Minecraft-to-Discord links using expiring one-time codes.
+- A native Dialog API account dashboard with live Discord display names and
+  MiniMessage hex styling from each member's highest colored role.
 - A console-only account-link administration command.
 
 ## Build
@@ -40,6 +42,15 @@ MariaDB, and PostgreSQL through the `database` section of `config.yml`.
 Install the JAR in exactly one mode; do not place copies in both `plugins` and
 `plugins/Plex/modules` on the same server.
 
+### Source layout
+
+- `common` contains configuration, dialog UI, linking, relay services, and the
+  platform abstraction shared by both runtime modes.
+- `module` contains only Plex commands, listeners, lifecycle, and platform
+  integration.
+- `standalone` contains only the Paper entry point, commands, listeners,
+  platform adapter, and owned Hikari database implementation.
+
 Plex staff-chat capture is only available in module mode because standalone
 Paper has no Plex staff-chat event. Public chat, Discord-to-permission staff
 messages, lifecycle messages, and account linking work in both modes.
@@ -64,16 +75,18 @@ only that route stays disabled; the module and the other route continue.
 
 ## Account linking
 
-With `linking.enabled: true`, a player runs `/discordlink` in Minecraft. The
-command returns a one-time code which expires after the configured number of
-seconds. The player sends that code in a direct message to the Discord bot;
-successful links are stored in SQL. Plex mode uses Plex's configured database;
-standalone mode uses the configured standalone Hikari datasource. An existing
-legacy `links.yml` is imported once and renamed to `links.yml.migrated`.
+With `linking.enabled: true`, a player runs `/discordlink` in Minecraft to open
+a native dialog dashboard. It can generate and copy a one-time code, refresh
+the linked profile, show the Discord member display name in their highest
+colored role's exact hex color, and unlink with confirmation. The player sends
+the code in a direct message to the Discord bot; successful links are stored in
+SQL. Plex mode uses Plex's configured database; standalone mode uses the
+configured standalone Hikari datasource. An existing legacy `links.yml` is
+imported once and renamed to `links.yml.migrated`.
 
-Players can use `/discordlink status` and, when enabled,
-`/discordlink unlink`. Discord messages can display a linked Minecraft name
-using `linking.linked-name-format`.
+Players can still use `/discordlink code`, `/discordlink status`, and, when
+enabled, `/discordlink unlink` as text fallbacks. Discord messages can display
+a linked Minecraft name using `linking.linked-name-format`.
 
 The console-only `/discordlinkadmin` command supports:
 

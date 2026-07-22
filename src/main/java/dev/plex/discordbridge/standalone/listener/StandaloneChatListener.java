@@ -1,6 +1,6 @@
-package dev.plex.discordbridge.standalone;
+package dev.plex.discordbridge.standalone.listener;
 
-import dev.plex.discordbridge.service.DiscordBridgeService;
+import dev.plex.discordbridge.common.service.DiscordBridgeService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;

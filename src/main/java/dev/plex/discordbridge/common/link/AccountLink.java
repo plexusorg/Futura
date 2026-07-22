@@ -1,4 +1,4 @@
-package dev.plex.discordbridge.link;
+package dev.plex.discordbridge.common.link;
 
 import java.util.UUID;
 

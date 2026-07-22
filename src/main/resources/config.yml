@@ -49,8 +49,10 @@ server-messages:
   # Maximum time shutdown waits for Discord to accept the stopped message.
   shutdown-timeout-seconds: 3
 
-# Minecraft players run /discordlink to receive a one-time code, then DM that
-# code to the Discord bot. Links are persisted in SQL in both installation modes.
+# Minecraft players run /discordlink to open a native Minecraft dialog where
+# they can connect, inspect, refresh, or unlink their Discord account. The
+# code/status/unlink subcommands remain available as text fallbacks.
+# Links are persisted in SQL in both installation modes.
 linking:
   enabled: true
   code-length: 6

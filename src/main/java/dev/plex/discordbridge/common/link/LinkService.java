@@ -1,6 +1,6 @@
-package dev.plex.discordbridge.link;
+package dev.plex.discordbridge.common.link;
 
-import dev.plex.discordbridge.BridgeSettings;
+import dev.plex.discordbridge.common.config.BridgeSettings;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Locale;

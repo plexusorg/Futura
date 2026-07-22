@@ -1,13 +1,14 @@
-package dev.plex.discordbridge.service;
+package dev.plex.discordbridge.common.service;
 
-import dev.plex.discordbridge.BridgeSettings;
-import dev.plex.discordbridge.link.LinkService;
-import dev.plex.discordbridge.link.AccountLink;
-import dev.plex.discordbridge.platform.BridgePlatform;
+import dev.plex.discordbridge.common.config.BridgeSettings;
+import dev.plex.discordbridge.common.link.LinkService;
+import dev.plex.discordbridge.common.link.AccountLink;
+import dev.plex.discordbridge.common.platform.BridgePlatform;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.TimeUnit;
 import net.dv8tion.jda.api.JDA;
@@ -15,6 +16,9 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
@@ -150,6 +154,68 @@ public final class DiscordBridgeService extends ListenerAdapter
         if (settings.staffChat().minecraftToDiscord())
         {
             send(staffChannel, formatDiscord(settings.staffToDiscordFormat(), player, message), "staff chat");
+        }
+    }
+
+    public CompletableFuture<DiscordIdentity> resolveDiscordIdentity(String discordId)
+    {
+        JDA current = jda;
+        if (current == null || stopping.get())
+        {
+            return CompletableFuture.completedFuture(DiscordIdentity.unavailable(discordId));
+        }
+
+        Guild guild = identityGuild(current);
+        if (guild == null)
+        {
+            return resolveUserIdentity(current, discordId);
+        }
+
+        return guild.retrieveMemberById(discordId)
+                .submit()
+                .handle((member, failure) -> member == null ? null : DiscordIdentity.from(member))
+                .thenCompose(identity -> identity == null
+                        ? resolveUserIdentity(current, discordId)
+                        : CompletableFuture.completedFuture(identity));
+    }
+
+    private Guild identityGuild(JDA current)
+    {
+        if (!settings.guildId().isBlank())
+        {
+            try
+            {
+                Guild configured = current.getGuildById(settings.guildId());
+                if (configured != null)
+                {
+                    return configured;
+                }
+            }
+            catch (IllegalArgumentException ignored)
+            {
+                // Fall through to a resolved bridge channel's guild.
+            }
+        }
+        if (chatChannel != null)
+        {
+            return chatChannel.getGuild();
+        }
+        return staffChannel == null ? null : staffChannel.getGuild();
+    }
+
+    private CompletableFuture<DiscordIdentity> resolveUserIdentity(JDA current, String discordId)
+    {
+        try
+        {
+            return current.retrieveUserById(discordId)
+                    .submit()
+                    .handle((user, failure) -> user == null
+                            ? DiscordIdentity.unavailable(discordId)
+                            : DiscordIdentity.from(user));
+        }
+        catch (RuntimeException exception)
+        {
+            return CompletableFuture.completedFuture(DiscordIdentity.unavailable(discordId));
         }
     }
 
@@ -304,6 +370,68 @@ public final class DiscordBridgeService extends ListenerAdapter
                         .replace("{minecraft}", link.minecraftName())
                         .replace("{discord}", discordName))
                 .orElse(discordName);
+    }
+
+    public record DiscordIdentity(
+            String discordId,
+            String displayName,
+            String username,
+            String primaryRoleName,
+            int primaryRoleColor,
+            boolean guildMember,
+            boolean available)
+    {
+        private static final int DISCORD_BLURPLE = 0x5865F2;
+
+        private static DiscordIdentity from(Member member)
+        {
+            Role primaryColoredRole = member.getRoles().stream()
+                    .filter(role -> role.getColors().getPrimaryRaw() != Role.DEFAULT_COLOR_RAW)
+                    .findFirst()
+                    .orElse(null);
+            int color = member.getColors().getPrimaryRaw();
+            if (color == Role.DEFAULT_COLOR_RAW)
+            {
+                color = DISCORD_BLURPLE;
+            }
+            return new DiscordIdentity(
+                    member.getId(),
+                    member.getEffectiveName(),
+                    member.getUser().getName(),
+                    primaryColoredRole == null ? "No colored role" : primaryColoredRole.getName(),
+                    color,
+                    true,
+                    true);
+        }
+
+        private static DiscordIdentity from(User user)
+        {
+            return new DiscordIdentity(
+                    user.getId(),
+                    user.getEffectiveName(),
+                    user.getName(),
+                    "Not available outside the configured server",
+                    DISCORD_BLURPLE,
+                    false,
+                    true);
+        }
+
+        private static DiscordIdentity unavailable(String discordId)
+        {
+            return new DiscordIdentity(
+                    discordId,
+                    "Discord member unavailable",
+                    "unknown",
+                    "Bot is offline or the member could not be found",
+                    DISCORD_BLURPLE,
+                    false,
+                    false);
+        }
+
+        public String colorHex()
+        {
+            return String.format("#%06X", primaryRoleColor & 0xFFFFFF);
+        }
     }
 
     private void sendStoppedMessage()

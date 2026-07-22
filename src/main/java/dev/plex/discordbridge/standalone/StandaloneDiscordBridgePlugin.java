@@ -1,13 +1,17 @@
 package dev.plex.discordbridge.standalone;
 
-import dev.plex.discordbridge.BridgeSettings;
-import dev.plex.discordbridge.link.JdbiLinkRepository;
-import dev.plex.discordbridge.link.DisabledLinkRepository;
-import dev.plex.discordbridge.link.LinkRepository;
-import dev.plex.discordbridge.link.LinkService;
-import dev.plex.discordbridge.link.LegacyLinkImporter;
-import dev.plex.discordbridge.platform.StandaloneBridgePlatform;
-import dev.plex.discordbridge.service.DiscordBridgeService;
+import dev.plex.discordbridge.common.config.BridgeSettings;
+import dev.plex.discordbridge.common.link.JdbiLinkRepository;
+import dev.plex.discordbridge.common.link.DisabledLinkRepository;
+import dev.plex.discordbridge.common.dialog.LinkDialogController;
+import dev.plex.discordbridge.common.link.LinkRepository;
+import dev.plex.discordbridge.common.link.LinkService;
+import dev.plex.discordbridge.common.link.LegacyLinkImporter;
+import dev.plex.discordbridge.common.service.DiscordBridgeService;
+import dev.plex.discordbridge.standalone.command.StandaloneLinkCommands;
+import dev.plex.discordbridge.standalone.database.StandaloneDatabase;
+import dev.plex.discordbridge.standalone.listener.StandaloneChatListener;
+import dev.plex.discordbridge.standalone.platform.StandaloneBridgePlatform;
 import java.io.IOException;
 import java.sql.SQLException;
 import org.bukkit.command.PluginCommand;
@@ -54,7 +58,8 @@ public final class StandaloneDiscordBridgePlugin extends JavaPlugin
         bridge = new DiscordBridgeService(platform, settings, links);
         getServer().getPluginManager().registerEvents(new StandaloneChatListener(bridge), this);
 
-        StandaloneLinkCommands commands = new StandaloneLinkCommands(links, settings.linking());
+        LinkDialogController dialogs = new LinkDialogController(links, settings.linking(), bridge, platform);
+        StandaloneLinkCommands commands = new StandaloneLinkCommands(links, settings.linking(), dialogs);
         configureCommand("discordlink", commands);
         configureCommand("discordlinkadmin", commands);
 

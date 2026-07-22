@@ -1,6 +1,6 @@
-package dev.plex.discordbridge.link;
+package dev.plex.discordbridge.common.link;
 
-import dev.plex.discordbridge.platform.BridgePlatform;
+import dev.plex.discordbridge.common.platform.BridgePlatform;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

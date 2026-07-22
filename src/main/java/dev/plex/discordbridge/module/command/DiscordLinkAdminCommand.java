@@ -1,11 +1,11 @@
-package dev.plex.discordbridge.command;
+package dev.plex.discordbridge.module.command;
 
 import dev.plex.api.player.PlexPlayerView;
 import dev.plex.command.SimplePlexCommand;
 import dev.plex.command.source.RequiredCommandSource;
-import dev.plex.discordbridge.BridgeSettings;
-import dev.plex.discordbridge.link.AccountLink;
-import dev.plex.discordbridge.link.LinkService;
+import dev.plex.discordbridge.common.config.BridgeSettings;
+import dev.plex.discordbridge.common.link.AccountLink;
+import dev.plex.discordbridge.common.link.LinkService;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;

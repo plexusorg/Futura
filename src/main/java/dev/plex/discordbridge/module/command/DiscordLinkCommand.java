@@ -1,9 +1,10 @@
-package dev.plex.discordbridge.command;
+package dev.plex.discordbridge.module.command;
 
 import dev.plex.command.SimplePlexCommand;
 import dev.plex.command.source.RequiredCommandSource;
-import dev.plex.discordbridge.BridgeSettings;
-import dev.plex.discordbridge.link.LinkService;
+import dev.plex.discordbridge.common.config.BridgeSettings;
+import dev.plex.discordbridge.common.dialog.LinkDialogController;
+import dev.plex.discordbridge.common.link.LinkService;
 import java.util.List;
 import java.util.Locale;
 import net.kyori.adventure.text.Component;
@@ -17,17 +18,22 @@ public final class DiscordLinkCommand extends SimplePlexCommand
 {
     private final LinkService links;
     private final BridgeSettings.Linking settings;
+    private final LinkDialogController dialogs;
 
-    public DiscordLinkCommand(LinkService links, BridgeSettings.Linking settings)
+    public DiscordLinkCommand(
+            LinkService links,
+            BridgeSettings.Linking settings,
+            LinkDialogController dialogs)
     {
         super(command(settings.playerCommandName())
                 .description("Link your Minecraft account to Discord")
-                .usage("/<command> [code | status | unlink]")
+                .usage("/<command> [gui | code | status | unlink]")
                 .aliases(settings.playerCommandAliases())
                 .source(RequiredCommandSource.IN_GAME)
                 .build());
         this.links = links;
         this.settings = settings;
+        this.dialogs = dialogs;
     }
 
     @Override
@@ -42,7 +48,13 @@ public final class DiscordLinkCommand extends SimplePlexCommand
             return Component.text("Discord account linking is disabled.", NamedTextColor.RED);
         }
 
-        String action = args.length == 0 ? "code" : args[0].toLowerCase(Locale.ROOT);
+        if (args.length == 0 || args[0].equalsIgnoreCase("gui"))
+        {
+            dialogs.show(player);
+            return Component.empty();
+        }
+
+        String action = args[0].toLowerCase(Locale.ROOT);
         return switch (action)
         {
             case "code" -> issueCode(player);
@@ -63,8 +75,8 @@ public final class DiscordLinkCommand extends SimplePlexCommand
             return List.of();
         }
         return settings.playerCanUnlink()
-                ? List.of("code", "status", "unlink")
-                : List.of("code", "status");
+                ? List.of("gui", "code", "status", "unlink")
+                : List.of("gui", "code", "status");
     }
 
     private Component issueCode(Player player)

@@ -1,8 +1,9 @@
-package dev.plex.discordbridge.standalone;
+package dev.plex.discordbridge.standalone.command;
 
-import dev.plex.discordbridge.BridgeSettings;
-import dev.plex.discordbridge.link.AccountLink;
-import dev.plex.discordbridge.link.LinkService;
+import dev.plex.discordbridge.common.config.BridgeSettings;
+import dev.plex.discordbridge.common.link.AccountLink;
+import dev.plex.discordbridge.common.dialog.LinkDialogController;
+import dev.plex.discordbridge.common.link.LinkService;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -25,11 +26,16 @@ public final class StandaloneLinkCommands implements CommandExecutor, TabComplet
 {
     private final LinkService links;
     private final BridgeSettings.Linking settings;
+    private final LinkDialogController dialogs;
 
-    public StandaloneLinkCommands(LinkService links, BridgeSettings.Linking settings)
+    public StandaloneLinkCommands(
+            LinkService links,
+            BridgeSettings.Linking settings,
+            LinkDialogController dialogs)
     {
         this.links = links;
         this.settings = settings;
+        this.dialogs = dialogs;
     }
 
     @Override
@@ -72,8 +78,8 @@ public final class StandaloneLinkCommands implements CommandExecutor, TabComplet
         if (args.length == 1)
         {
             return settings.playerCanUnlink()
-                    ? List.of("code", "status", "unlink")
-                    : List.of("code", "status");
+                    ? List.of("gui", "code", "status", "unlink")
+                    : List.of("gui", "code", "status");
         }
         return List.of();
     }
@@ -88,7 +94,12 @@ public final class StandaloneLinkCommands implements CommandExecutor, TabComplet
         {
             return error("Discord account linking is disabled.");
         }
-        String action = args.length == 0 ? "code" : args[0].toLowerCase(Locale.ROOT);
+        if (args.length == 0 || args[0].equalsIgnoreCase("gui"))
+        {
+            dialogs.show(player);
+            return Component.empty();
+        }
+        String action = args[0].toLowerCase(Locale.ROOT);
         return switch (action)
         {
             case "code" -> issueCode(player.getUniqueId(), player.getName());
@@ -96,7 +107,7 @@ public final class StandaloneLinkCommands implements CommandExecutor, TabComplet
                     .<Component>map(link -> success("Linked to Discord user ID " + link.discordId() + "."))
                     .orElseGet(() -> info("Your account is not linked."));
             case "unlink" -> unlinkSelf(player);
-            default -> error("Usage: /discordlink [code | status | unlink]");
+            default -> error("Usage: /discordlink [gui | code | status | unlink]");
         };
     }
 

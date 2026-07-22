@@ -1,71 +1,70 @@
-package dev.plex.discordbridge.platform;
+package dev.plex.discordbridge.module.platform;
 
+import dev.plex.discordbridge.common.platform.BridgePlatform;
+import dev.plex.discordbridge.module.DiscordBridgeModule;
 import java.io.File;
-import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
-public final class StandaloneBridgePlatform implements BridgePlatform
+public final class PlexBridgePlatform implements BridgePlatform
 {
-    private final JavaPlugin plugin;
+    private final DiscordBridgeModule module;
 
-    public StandaloneBridgePlatform(JavaPlugin plugin)
+    public PlexBridgePlatform(DiscordBridgeModule module)
     {
-        this.plugin = plugin;
+        this.module = module;
     }
 
     @Override
     public File dataFolder()
     {
-        return plugin.getDataFolder();
+        return module.getDataFolder();
     }
 
     @Override
     public void info(String message, Object... arguments)
     {
-        plugin.getLogger().info(format(message, arguments));
+        module.api().logging().info(message, arguments);
     }
 
     @Override
     public void warn(String message, Object... arguments)
     {
-        plugin.getLogger().warning(format(message, arguments));
+        module.api().logging().warn(message, arguments);
     }
 
     @Override
     public void error(String message, Object... arguments)
     {
-        plugin.getLogger().severe(format(message, arguments));
+        module.api().logging().error(message, arguments);
     }
 
     @Override
     public void executeGlobal(Runnable task)
     {
-        Bukkit.getGlobalRegionScheduler().execute(plugin, task);
+        module.api().scheduler().executeGlobal(task);
     }
 
     @Override
     public void executeEntity(Player player, Runnable task)
     {
-        player.getScheduler().execute(plugin, task, null, 1L);
+        module.api().scheduler().executeEntity(player, task, null, 1L);
     }
 
     @Override
     public void broadcast(Component message)
     {
-        Bukkit.broadcast(message);
+        module.api().messages().broadcast(message);
     }
 
     @Override
     public Component miniMessage(String input)
     {
-        return MiniMessage.miniMessage().deserialize(input);
+        return module.api().messages().miniMessage(input);
     }
 
     @Override
@@ -78,10 +77,5 @@ public final class StandaloneBridgePlatform implements BridgePlatform
     public Optional<Player> onlinePlayer(UUID minecraftId)
     {
         return Optional.ofNullable(Bukkit.getPlayer(minecraftId));
-    }
-
-    private static String format(String message, Object... arguments)
-    {
-        return MessageFormat.format(message, arguments);
     }
 }

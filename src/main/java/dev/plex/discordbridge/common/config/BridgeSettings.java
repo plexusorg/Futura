@@ -1,4 +1,4 @@
-package dev.plex.discordbridge;
+package dev.plex.discordbridge.common.config;
 
 import java.util.List;
 import java.util.Locale;

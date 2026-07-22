@@ -1,4 +1,4 @@
-package dev.plex.discordbridge.platform;
+package dev.plex.discordbridge.common.platform;
 
 import java.io.File;
 import java.util.Collection;

@@ -18,7 +18,7 @@ libraries:
 commands:
   discordlink:
     description: Link your Minecraft account to Discord
-    usage: /discordlink [code | status | unlink]
+    usage: /discordlink [gui | code | status | unlink]
     aliases:
       - linkdiscord
   discordlinkadmin:

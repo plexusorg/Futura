@@ -1,15 +1,17 @@
-package dev.plex.discordbridge;
+package dev.plex.discordbridge.module;
 
 import dev.plex.api.config.ModuleConfiguration;
-import dev.plex.discordbridge.command.DiscordLinkAdminCommand;
-import dev.plex.discordbridge.command.DiscordLinkCommand;
-import dev.plex.discordbridge.link.JdbiLinkRepository;
-import dev.plex.discordbridge.link.DisabledLinkRepository;
-import dev.plex.discordbridge.link.LinkService;
-import dev.plex.discordbridge.link.LegacyLinkImporter;
-import dev.plex.discordbridge.listener.PlexChatListener;
-import dev.plex.discordbridge.platform.PlexBridgePlatform;
-import dev.plex.discordbridge.service.DiscordBridgeService;
+import dev.plex.discordbridge.common.config.BridgeSettings;
+import dev.plex.discordbridge.module.command.DiscordLinkAdminCommand;
+import dev.plex.discordbridge.module.command.DiscordLinkCommand;
+import dev.plex.discordbridge.common.link.JdbiLinkRepository;
+import dev.plex.discordbridge.common.link.DisabledLinkRepository;
+import dev.plex.discordbridge.common.dialog.LinkDialogController;
+import dev.plex.discordbridge.common.link.LinkService;
+import dev.plex.discordbridge.common.link.LegacyLinkImporter;
+import dev.plex.discordbridge.module.listener.PlexChatListener;
+import dev.plex.discordbridge.module.platform.PlexBridgePlatform;
+import dev.plex.discordbridge.common.service.DiscordBridgeService;
 import dev.plex.module.PlexModule;
 import dev.plex.api.storage.ModuleStorage;
 import java.io.File;
@@ -105,7 +107,8 @@ public final class DiscordBridgeModule extends PlexModule
         registerListener(new PlexChatListener(bridge));
         if (settings.linking().enabled())
         {
-            registerCommand(new DiscordLinkCommand(links, settings.linking()));
+            LinkDialogController dialogs = new LinkDialogController(links, settings.linking(), bridge, platform);
+            registerCommand(new DiscordLinkCommand(links, settings.linking(), dialogs));
             registerCommand(new DiscordLinkAdminCommand(links, settings.linking()));
         }
 

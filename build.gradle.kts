@@ -22,11 +22,6 @@ dependencies {
     compileOnly("org.mariadb.jdbc:mariadb-java-client:3.5.9")
     compileOnly("org.postgresql:postgresql:42.7.13")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.0.3")
-    testImplementation("org.jdbi:jdbi3-core:3.54.0")
-    testImplementation("com.zaxxer:HikariCP:7.1.0")
-    testImplementation("org.xerial:sqlite-jdbc:3.53.2.0")
 }
 
 group = "dev.plex"
@@ -52,8 +47,4 @@ tasks.withType<Javadoc>().configureEach {
 
 tasks.processResources {
     filteringCharset = Charsets.UTF_8.name()
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
