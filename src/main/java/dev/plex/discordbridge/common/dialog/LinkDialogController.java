@@ -87,19 +87,19 @@ public final class LinkDialogController
     private Dialog unlinkedDialog(Player player)
     {
         Component description = mini(
-                "<#B5BAC1>Connect your Minecraft profile to Discord for a seamless identity across both communities.</#B5BAC1>");
+                "<#E3E5E8>Connect your Minecraft profile to Discord for a seamless identity across both communities.</#E3E5E8>");
         Component status = mini(
                 "<#ED4245><bold>● NOT LINKED</bold></#ED4245><newline>"
-                        + "<#949BA4>No Discord account is connected to <white>"
-                        + escape(player.getName()) + "</white>.</#949BA4>");
+                        + "<#FEE75C>No Discord account is connected to <white>"
+                        + escape(player.getName()) + "</white>.</#FEE75C>");
 
         ActionButton link = button(
                 "<#FFFFFF><bold>✦ LINK DISCORD</bold></#FFFFFF>",
-                "<#B5BAC1>Generate a private one-time link code</#B5BAC1>",
+                "<#E3E5E8>Generate a private one-time link code</#E3E5E8>",
                 action(player, this::showCode));
         ActionButton refresh = button(
-                "<#B5BAC1>↻ REFRESH</#B5BAC1>",
-                "<#B5BAC1>Check whether a recent Discord DM completed</#B5BAC1>",
+                "<#E3E5E8>↻ REFRESH</#E3E5E8>",
+                "<#E3E5E8>Check whether a recent Discord DM completed</#E3E5E8>",
                 action(player, this::show));
 
         return dialog(
@@ -115,7 +115,7 @@ public final class LinkDialogController
         return dialog(
                 "<#5865F2><bold>DISCORD CONNECTION</bold></#5865F2>",
                 Material.ENDER_EYE,
-                mini("<#B5BAC1>Fetching your live Discord member profile…</#B5BAC1>"),
+                mini("<#E3E5E8>Fetching your live Discord member profile…</#E3E5E8>"),
                 mini("<#5865F2><bold>◌ SYNCING MEMBER DETAILS</bold></#5865F2>"),
                 DialogType.notice(closeButton("CLOSE")));
     }
@@ -128,24 +128,24 @@ public final class LinkDialogController
         String color = identity.colorHex();
         Component member = mini(
                 "<#57F287><bold>● CONNECTED</bold></#57F287><newline>"
-                        + "<#949BA4>Discord member</#949BA4><newline>"
+                        + "<#FEE75C>Discord member</#FEE75C><newline>"
                         + "<" + color + "><bold>" + escape(identity.displayName()) + "</bold></" + color + ">"
-                        + " <#949BA4>(@" + escape(identity.username()) + ")</#949BA4>");
+                        + " <#FEE75C>(@" + escape(identity.username()) + ")</#FEE75C>");
         Component role = mini(
-                "<#949BA4>Primary role color</#949BA4><newline>"
+                "<#FEE75C>Primary role color</#FEE75C><newline>"
                         + "<" + color + "><bold>◆ " + escape(identity.primaryRoleName()) + "</bold></" + color + "><newline>"
-                        + "<#72767D>" + color + " • Discord ID " + escape(link.discordId()) + "</#72767D>");
+                        + "<#DCDDDE>" + color + " • Discord ID " + escape(link.discordId()) + "</#DCDDDE>");
         Component linkedAt = mini(
-                "<#949BA4>Linked to Minecraft as <white>" + escape(link.minecraftName())
+                "<#FEE75C>Linked to Minecraft as <white>" + escape(link.minecraftName())
                         + "</white> on <white>" + LINK_DATE.format(Instant.ofEpochSecond(link.linkedAtEpochSecond()))
-                        + "</white>.</#949BA4>"
+                        + "</white>.</#FEE75C>"
                         + (identity.guildMember()
                         ? ""
                         : "<newline><#FEE75C>Member role details are unavailable outside the configured Discord server.</#FEE75C>"));
 
         ActionButton refresh = button(
                 "<#FFFFFF><bold>↻ REFRESH PROFILE</bold></#FFFFFF>",
-                "<#B5BAC1>Fetch the latest display name and role color</#B5BAC1>",
+                "<#E3E5E8>Fetch the latest display name and role color</#E3E5E8>",
                 action(player, this::show));
         DialogAction unlinkAction = settings.playerCanUnlink()
                 ? action(player, this::showUnlinkConfirmation)
@@ -153,10 +153,10 @@ public final class LinkDialogController
         ActionButton unlink = button(
                 settings.playerCanUnlink()
                         ? "<#ED4245><bold>UNLINK ACCOUNT</bold></#ED4245>"
-                        : "<#72767D>UNLINK DISABLED</#72767D>",
+                        : "<#DCDDDE>UNLINK DISABLED</#DCDDDE>",
                 settings.playerCanUnlink()
-                        ? "<#B5BAC1>Disconnect this Discord account</#B5BAC1>"
-                        : "<#B5BAC1>Only an administrator can unlink accounts</#B5BAC1>",
+                        ? "<#E3E5E8>Disconnect this Discord account</#E3E5E8>"
+                        : "<#E3E5E8>Only an administrator can unlink accounts</#E3E5E8>",
                 unlinkAction);
 
         return dialog(
@@ -182,24 +182,24 @@ public final class LinkDialogController
     private Dialog codeDialog(Player player, LinkService.CodeIssue code)
     {
         Component instructions = mini(
-                "<#B5BAC1>Direct-message this one-time code to the Discord bot. "
-                        + "It expires in <white>" + code.expiresInSeconds() + " seconds</white>.</#B5BAC1>");
+                "<#E3E5E8>Direct-message this one-time code to the Discord bot. "
+                        + "It expires in <white>" + code.expiresInSeconds() + " seconds</white>.</#E3E5E8>");
         Component codeDisplay = mini(
-                "<#949BA4>YOUR PRIVATE CODE</#949BA4><newline>"
+                "<#FEE75C>YOUR PRIVATE CODE</#FEE75C><newline>"
                         + "<#5865F2><bold>「 " + escape(code.code()) + " 」</bold></#5865F2><newline>"
                         + "<#FEE75C>Never share this code with another player.</#FEE75C>");
 
         ActionButton copy = button(
                 "<#FFFFFF><bold>⧉ COPY CODE</bold></#FFFFFF>",
-                "<#B5BAC1>Copy " + escape(code.code()) + " to your clipboard</#B5BAC1>",
+                "<#E3E5E8>Copy " + escape(code.code()) + " to your clipboard</#E3E5E8>",
                 DialogAction.staticAction(ClickEvent.copyToClipboard(code.code())));
         ActionButton regenerate = button(
-                "<#B5BAC1>↻ NEW CODE</#B5BAC1>",
-                "<#B5BAC1>Invalidate this code and generate another</#B5BAC1>",
+                "<#E3E5E8>↻ NEW CODE</#E3E5E8>",
+                "<#E3E5E8>Invalidate this code and generate another</#E3E5E8>",
                 action(player, this::showCode));
         ActionButton back = button(
-                "<#B5BAC1>← BACK</#B5BAC1>",
-                "<#B5BAC1>Return to your connection dashboard</#B5BAC1>",
+                "<#E3E5E8>← BACK</#E3E5E8>",
+                "<#E3E5E8>Return to your connection dashboard</#E3E5E8>",
                 action(player, this::show));
 
         return dialog(
@@ -225,14 +225,14 @@ public final class LinkDialogController
                 action(player, this::unlink));
         ActionButton cancel = button(
                 "<#57F287><bold>KEEP LINKED</bold></#57F287>",
-                "<#B5BAC1>Return without changing your account</#B5BAC1>",
+                "<#E3E5E8>Return without changing your account</#E3E5E8>",
                 action(player, this::show));
 
         player.showDialog(dialog(
                 "<#ED4245><bold>UNLINK DISCORD?</bold></#ED4245>",
                 Material.BARRIER,
-                mini("<#B5BAC1>You will lose your linked Discord identity in Minecraft chat. "
-                        + "You can link again later with a new code.</#B5BAC1>"),
+                mini("<#E3E5E8>You will lose your linked Discord identity in Minecraft chat. "
+                        + "You can link again later with a new code.</#E3E5E8>"),
                 mini("<#FEE75C><bold>This only removes the account connection; it does not affect either account.</bold></#FEE75C>"),
                 DialogType.confirmation(confirm, cancel)));
     }
@@ -310,8 +310,8 @@ public final class LinkDialogController
     private ActionButton closeButton(String label)
     {
         return ActionButton.create(
-                mini("<#949BA4>" + escape(label) + "</#949BA4>"),
-                mini("<#72767D>Close this screen</#72767D>"),
+                mini("<#FEE75C>" + escape(label) + "</#FEE75C>"),
+                mini("<#DCDDDE>Close this screen</#DCDDDE>"),
                 100,
                 DialogAction.customClick(
                         (response, audience) -> audience.closeDialog(),
