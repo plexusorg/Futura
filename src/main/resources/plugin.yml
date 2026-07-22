@@ -1,0 +1,26 @@
+name: PlexDiscordBridge
+main: dev.plex.discordbridge.standalone.StandaloneDiscordBridgePlugin
+version: 1.0.0
+description: Bidirectional Minecraft and Discord chat with account linking
+api-version: '26.1'
+folia-supported: true
+authors:
+  - Plexus
+
+libraries:
+  - net.dv8tion:JDA:6.5.0
+  - com.zaxxer:HikariCP:7.1.0
+  - org.jdbi:jdbi3-core:3.54.0
+  - org.xerial:sqlite-jdbc:3.53.2.0
+  - org.mariadb.jdbc:mariadb-java-client:3.5.9
+  - org.postgresql:postgresql:42.7.13
+
+commands:
+  discordlink:
+    description: Link your Minecraft account to Discord
+    usage: /discordlink [code | status | unlink]
+    aliases:
+      - linkdiscord
+  discordlinkadmin:
+    description: Manage Discord account links from the server console
+    usage: /discordlinkadmin <list | lookup | code | link | unlink> ...

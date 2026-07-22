@@ -1,0 +1,35 @@
+package dev.plex.discordbridge.listener;
+
+import dev.plex.discordbridge.service.DiscordBridgeService;
+import dev.plex.api.event.StaffChatMessageEvent;
+import dev.plex.listener.PlexListener;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+
+public final class PlexChatListener extends PlexListener
+{
+    private static final PlainTextComponentSerializer PLAIN = PlainTextComponentSerializer.plainText();
+
+    private final DiscordBridgeService bridge;
+
+    public PlexChatListener(DiscordBridgeService bridge)
+    {
+        this.bridge = bridge;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onChat(AsyncChatEvent event)
+    {
+        String player = event.getPlayer().getName();
+        String message = PLAIN.serialize(event.message());
+        bridge.sendPublicChat(player, message);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onStaffChat(StaffChatMessageEvent event)
+    {
+        bridge.sendStaffChat(event.getSender().getName(), PLAIN.serialize(event.getMessage()));
+    }
+}

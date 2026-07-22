@@ -1,32 +1,111 @@
+# Discord bot connection settings.
 bot:
-  # Or you can also specify a property or environment variable in your JVM called BOT_TOKEN
+  enabled: true
+
+  # Create a bot at https://discord.com/developers/applications and paste its
+  # token here. Never commit a real token to source control.
   token: ""
-  status: "Playing on TotalFreedom with %players% players!"
+
+  # MESSAGE CONTENT INTENT must also be enabled for the bot in Discord's
+  # Developer Portal so Discord messages can be relayed to Minecraft.
+  activity: "Minecraft chat"
+
+# Optional but strongly recommended when fallback channel names are used.
+# It prevents an identically named channel in another guild from being chosen.
+guild-id: ""
+
+channels:
+  chat:
+    # Preferred lookup. Leave blank to use fallback-name.
+    id: ""
+    fallback-name: "minecraft-chat"
+    minecraft-to-discord: true
+    discord-to-minecraft: true
+
+  staff-chat:
+    # The staff route is always resolved independently from public chat.
+    id: ""
+    fallback-name: "staff-chat"
+    minecraft-to-discord: true
+    discord-to-minecraft: true
+
+    # Players need this permission to receive Discord staff-chat messages.
+    receive-permission: "plex.adminchat"
+    send-to-console: true
 
 discord:
-  # Channel for chat bridge between discord and minecraft
-  chat: ""
-  #
-  linking:
-    enabled: false
-    # Time in seconds the code will be valid for until it expires and a new one will have to be requested for
-    expirationTime: 60
-    # You can leave this blank for no role to be given on linking
-    role: ""
-  # Roles sync if LuckPerms is on the server only
-  # Correct way to add roles to sync is:
-  # roles:
-  #   sync: true
-  #   luckpermsGroupName: "discordRoleId"
-  roles:
-    sync: false
+  # Ignoring bot/webhook authors prevents relay loops.
+  ignore-bots: true
+  ignore-webhooks: true
+  include-attachments: true
 
-  database:
-    # sqlite, mysql
-    type: sqlite
-    auth:
-      user: ""
-      password: ""
-      host: ""
-      port: 3306
-      database: ""
+# Messages sent to Discord when the Minecraft server starts and stops.
+server-messages:
+  enabled: true
+  # Either "chat" or "staff-chat".
+  route: "chat"
+  started: "🟢 **Server started.**"
+  stopped: "🔴 **Server stopped.**"
+  # Maximum time shutdown waits for Discord to accept the stopped message.
+  shutdown-timeout-seconds: 3
+
+# Minecraft players run /discordlink to receive a one-time code, then DM that
+# code to the Discord bot. Links are persisted in SQL in both installation modes.
+linking:
+  enabled: true
+  code-length: 6
+  code-expiry-seconds: 300
+  allow-minecraft-relink: false
+  allow-discord-relink: false
+
+  player-command:
+    # Custom command names apply in Plex module mode. Standalone Paper uses the
+    # names declared in plugin.yml: discordlink and linkdiscord.
+    name: "discordlink"
+    aliases:
+      - "linkdiscord"
+    allow-unlink: true
+
+  # This command is registered as console-only by Plex's command dispatcher.
+  admin-command:
+    # Standalone Paper uses the fixed plugin.yml name discordlinkadmin.
+    name: "discordlinkadmin"
+
+  # Show the linked Minecraft name for messages sent from Discord to Minecraft.
+  use-linked-name-in-chat: true
+  linked-name-format: "{minecraft} ({discord})"
+
+  dm-success: "Your Discord account is now linked to **{minecraft}**."
+  dm-invalid-code: "That link code is invalid or expired. Generate a new code in Minecraft."
+
+# Used only when this JAR is installed as a standalone Paper plugin. In Plex
+# module mode, links use Plex's shared Hikari/JDBI database and this is ignored.
+database:
+  storage: "sqlite" # sqlite, mariadb, or postgres
+
+  sqlite:
+    file: "links.db"
+
+  host: "127.0.0.1"
+  # 0 selects the normal port for the chosen storage (3306 for MariaDB,
+  # 5432 for PostgreSQL). Set a positive value to override it.
+  port: 0
+  name: "plex_discord_bridge"
+  username: "root"
+  password: ""
+
+  pool:
+    minimum-idle: 1
+    maximum-size: 10
+    connection-timeout-ms: 30000
+
+# Minecraft -> Discord uses plain strings. Discord mentions are disabled for
+# every outgoing message, so @everyone, roles, and user mentions cannot ping.
+formats:
+  chat-to-discord: "**{player}**: {message}"
+  staff-to-discord: "**[Staff] {player}**: {message}"
+
+  # These two are MiniMessage templates, but {user} and {message} are inserted
+  # as literal Adventure text and cannot inject MiniMessage tags.
+  discord-to-chat: "<dark_gray>[<blue>Discord</blue>]</dark_gray> <aqua>{user}</aqua><gray>: </gray><white>{message}</white>"
+  discord-to-staff: "<dark_gray>[<dark_aqua>Discord Staff</dark_aqua>]</dark_gray> <aqua>{user}</aqua><gray>: </gray><white>{message}</white>"

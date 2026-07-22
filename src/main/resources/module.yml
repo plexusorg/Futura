@@ -1,0 +1,16 @@
+name: Module-DiscordBridge
+main: dev.plex.discordbridge.DiscordBridgeModule
+description: Bridges Plex public and staff chat with Discord
+version: 1.0.0
+apiCompatibility: 1
+
+# Plex's Paper library loader resolves this and its transitive dependencies.
+# Install/update this module with a full server restart; a module reload cannot
+# add libraries to Plex's already-created classpath.
+libraries:
+  - net.dv8tion:JDA:6.5.0
+repositories:
+  central: https://repo.maven.apache.org/maven2
+
+updater:
+  enabled: false
