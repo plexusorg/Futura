@@ -45,10 +45,13 @@ public final class StandaloneLinkCommands implements CommandExecutor, TabComplet
             @NotNull String label,
             @NotNull String[] args)
     {
-        Component response = command.getName().equalsIgnoreCase("discordlinkadmin")
+        @Nullable Component response = command.getName().equalsIgnoreCase("discordlinkadmin")
                 ? admin(sender, args)
                 : player(sender, args);
-        sender.sendMessage(response);
+        if (response != null)
+        {
+            sender.sendMessage(response);
+        }
         return true;
     }
 
@@ -84,7 +87,7 @@ public final class StandaloneLinkCommands implements CommandExecutor, TabComplet
         return List.of();
     }
 
-    private Component player(CommandSender sender, String[] args)
+    private @Nullable Component player(CommandSender sender, String[] args)
     {
         if (!(sender instanceof Player player))
         {
@@ -97,7 +100,7 @@ public final class StandaloneLinkCommands implements CommandExecutor, TabComplet
         if (args.length == 0 || args[0].equalsIgnoreCase("gui"))
         {
             dialogs.show(player);
-            return Component.empty();
+            return null;
         }
         String action = args[0].toLowerCase(Locale.ROOT);
         return switch (action)

@@ -51,7 +51,7 @@ public final class DiscordLinkCommand extends SimplePlexCommand
         if (args.length == 0 || args[0].equalsIgnoreCase("gui"))
         {
             dialogs.show(player);
-            return Component.empty();
+            return null;
         }
 
         String action = args[0].toLowerCase(Locale.ROOT);
