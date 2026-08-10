@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
@@ -17,11 +18,17 @@ public interface BridgePlatform
 
     void error(String message, Object... arguments);
 
+    void error(String message, Throwable throwable, Object... arguments);
+
     void executeGlobal(Runnable task);
 
     void executeAsync(Runnable task);
 
     void executeEntity(Player player, Runnable task);
+
+    Optional<String> consoleCommandPermission(String command);
+
+    boolean dispatchConsole(UUID identityId, String identityName, String command, Consumer<? super Component> feedback);
 
     void broadcast(Component message);
 

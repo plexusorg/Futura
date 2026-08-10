@@ -37,9 +37,10 @@ channels:
     # Highly privileged integration. Discord users must have a linked account,
     # and that Minecraft UUID must have this permission. The player may be
     # offline. Grant it explicitly through your Vault-compatible permissions
-    # plugin; it authorizes console-level command execution from Discord.
+    # plugin. The linked account must also have the permission declared by the
+    # command itself (for example, plex.ban).
     # Restrict this Discord channel to people trusted with server log access;
-    # console output can contain IP addresses, plugin errors, or other secrets.
+    # even with IP redaction enabled, output can contain plugin errors or secrets.
     id: ""
     fallback-name: "console"
     server-output-to-discord: false
@@ -48,6 +49,10 @@ channels:
 
     # Console lines are batched to avoid Discord rate limits during log bursts.
     output:
+      # Removes IPv4 and IPv6 addresses from all messages sent to this channel,
+      # including live logs, command feedback, and command status messages.
+      redact-ip-addresses: true
+      ip-redaction-text: "[REDACTED IP]"
       batch-interval-ms: 1000
       max-lines-per-batch: 50
       max-queued-lines: 500
@@ -67,6 +72,35 @@ server-messages:
   stopped: "🔴 **Server stopped.**"
   # Maximum time shutdown waits for Discord to accept the stopped message.
   shutdown-timeout-seconds: 3
+
+# Public join and leave notices. Vanished players are always hidden.
+player-messages:
+  enabled: true
+  # Either "chat" or "staff-chat".
+  route: "chat"
+  joined: "🟢 **{player} joined the server.**"
+  left: "🔴 **{player} left the server.**"
+
+# Discord-native application commands. Commands are registered immediately in
+# the configured guild, or in every guild the bot is connected to when guild-id
+# is blank. /list always hides vanished players.
+slash-commands:
+  enabled: true
+  server-address: "play.example.com"
+  embed-color: "#F4C542"
+  footer: "Plex • Live Server Status"
+
+  list:
+    title: "Players Online"
+    description: "Here’s who’s currently playing on the server."
+    empty-description: "The server is quiet right now. Be the first to jump in!"
+    count-field: "Player Count"
+    players-field: "Currently Online"
+
+  info:
+    title: "Server Information"
+    description: "Everything you need to connect and start playing."
+    address-field: "Server Address"
 
 # Minecraft players run /discordlink to open a native Minecraft dialog where
 # they can connect, inspect, refresh, or unlink their Discord account. The

@@ -7,6 +7,8 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 public final class PlexChatListener extends PlexListener
 {
@@ -31,5 +33,17 @@ public final class PlexChatListener extends PlexListener
     public void onStaffChat(StaffChatMessageEvent event)
     {
         bridge.sendStaffChat(event.getSender().getName(), PLAIN.serialize(event.getMessage()));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onJoin(PlayerJoinEvent event)
+    {
+        bridge.sendPlayerJoined(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onQuit(PlayerQuitEvent event)
+    {
+        bridge.sendPlayerLeft(event.getPlayer());
     }
 }

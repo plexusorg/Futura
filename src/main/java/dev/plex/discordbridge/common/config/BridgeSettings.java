@@ -16,6 +16,8 @@ public record BridgeSettings(
         boolean ignoreWebhooks,
         boolean includeAttachments,
         Lifecycle lifecycle,
+        Presence presence,
+        SlashCommands slashCommands,
         Linking linking,
         String chatToDiscordFormat,
         String staffToDiscordFormat,
@@ -36,6 +38,8 @@ public record BridgeSettings(
                 config.getBoolean("discord.ignore-webhooks", true),
                 config.getBoolean("discord.include-attachments", true),
                 lifecycle(config),
+                presence(config),
+                slashCommands(config),
                 linking(config),
                 config.getString("formats.chat-to-discord", "**{player}**: {message}"),
                 config.getString("formats.staff-to-discord", "**[Staff] {player}**: {message}"),
@@ -51,6 +55,32 @@ public record BridgeSettings(
                 config.getString("server-messages.started", "🟢 **Server started.**"),
                 config.getString("server-messages.stopped", "🔴 **Server stopped.**"),
                 Math.max(1, config.getInt("server-messages.shutdown-timeout-seconds", 3)));
+    }
+
+    private static Presence presence(ConfigurationSection config)
+    {
+        return new Presence(
+                config.getBoolean("player-messages.enabled", true),
+                config.getString("player-messages.route", "chat").trim(),
+                config.getString("player-messages.joined", "🟢 **{player} joined the server.**"),
+                config.getString("player-messages.left", "🔴 **{player} left the server.**"));
+    }
+
+    private static SlashCommands slashCommands(ConfigurationSection config)
+    {
+        return new SlashCommands(
+                config.getBoolean("slash-commands.enabled", true),
+                config.getString("slash-commands.server-address", "play.example.com").trim(),
+                config.getString("slash-commands.embed-color", "#F4C542").trim(),
+                config.getString("slash-commands.footer", "Plex • Live Server Status"),
+                config.getString("slash-commands.list.title", "Players Online"),
+                config.getString("slash-commands.list.description", "Here’s who’s currently playing on the server."),
+                config.getString("slash-commands.list.empty-description", "The server is quiet right now. Be the first to jump in!"),
+                config.getString("slash-commands.list.count-field", "Player Count"),
+                config.getString("slash-commands.list.players-field", "Currently Online"),
+                config.getString("slash-commands.info.title", "Server Information"),
+                config.getString("slash-commands.info.description", "Everything you need to connect and start playing."),
+                config.getString("slash-commands.info.address-field", "Server Address"));
     }
 
     private static Linking linking(ConfigurationSection config)
@@ -108,6 +138,8 @@ public record BridgeSettings(
                 config.getBoolean(path + ".server-output-to-discord", false),
                 config.getBoolean(path + ".discord-to-server-commands", false),
                 permission,
+                config.getBoolean(path + ".output.redact-ip-addresses", true),
+                config.getString(path + ".output.ip-redaction-text", "[REDACTED IP]"),
                 Math.clamp(config.getLong(path + ".output.batch-interval-ms", 1_000L), 250L, 10_000L),
                 Math.clamp(config.getInt(path + ".output.max-lines-per-batch", 50), 1, 100),
                 Math.clamp(config.getInt(path + ".output.max-queued-lines", 500), 50, 5_000));
@@ -129,6 +161,8 @@ public record BridgeSettings(
             boolean serverOutputToDiscord,
             boolean discordToServerCommands,
             String permission,
+            boolean redactIpAddresses,
+            String ipRedactionText,
             long batchIntervalMillis,
             int maxLinesPerBatch,
             int maxQueuedLines)
@@ -145,6 +179,26 @@ public record BridgeSettings(
             String started,
             String stopped,
             int shutdownTimeoutSeconds)
+    {
+    }
+
+    public record Presence(boolean enabled, String route, String joined, String left)
+    {
+    }
+
+    public record SlashCommands(
+            boolean enabled,
+            String serverAddress,
+            String embedColor,
+            String footer,
+            String listTitle,
+            String listDescription,
+            String listEmptyDescription,
+            String listCountField,
+            String listPlayersField,
+            String infoTitle,
+            String infoDescription,
+            String infoAddressField)
     {
     }
 
