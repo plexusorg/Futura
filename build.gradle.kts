@@ -1,8 +1,8 @@
 plugins {
     id("java")
     `maven-publish`
-    id("net.minecrell.plugin-yml.paper") version "0.6.0"
-    id("com.gradleup.shadow") version "8.3.3"
+    id("de.eldoria.plugin-yml.paper") version "0.9.0"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 group = "dev.plex"
@@ -22,12 +22,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
-    library("net.dv8tion:JDA:5.1.2") {
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
+    library("net.dv8tion:JDA:6.5.0") {
         exclude(module = "opus-java")
     }
-    implementation("org.bstats:bstats-base:3.1.0")
-    implementation("org.bstats:bstats-bukkit:3.1.0")
+    implementation("org.bstats:bstats-base:3.2.1")
+    implementation("org.bstats:bstats-bukkit:3.2.1")
 }
 
 paper {
@@ -35,7 +35,7 @@ paper {
     version = project.version.toString()
     main = "dev.plex.futura.Futura"
     apiVersion = "1.20"
-    authors = listOf("Telesphoreo", "Taah")
+    authors = listOf("Telesphoreo", "Taah", "NotInSync")
     description = "Discord plugin bridge for Minecraft"
     website = "https://plex.us.org"
     loader = "dev.plex.futura.util.FuturaLibraryManager"
@@ -43,7 +43,7 @@ paper {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 tasks {
