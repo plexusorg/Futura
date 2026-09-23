@@ -1,0 +1,47 @@
+# The chat section is used to configure webhook and channels
+chat:
+  # The type is to determine whether chat from Minecraft are to be sent as a webhook message or a channel message
+  # Valid types are WEBHOOK and CHANNEL - invalid type will default to CHANNEL
+  # If WEBHOOK is selected, you'll need to set the URL as an environment variable named PLEX_STAFF_CHAT_WEBHOOK_URL
+  # If the webhook is deemed invalid, we'll fall back to channel via ID, then name before bailing out
+  type: "WEBHOOK"
+
+  # The defined channel ID to be used for Discord -> Minecraft chat, and if CHANNEL is defined as chat type,
+  # then this will also be used for Minecraft -> Discord chat
+  channel_id: "1234567890"
+
+  fallback_name: "admin-server-chat"
+
+# The messages section is used to configure message template for chat, player join/quit events and more
+messages:
+  # The discord section is for messages from Minecraft to Discord
+  # This section uses Markdown for formatting
+  discord:
+    # How should the bot send the chat message to Discord?
+    # This will only be applied when the chat type is set to CHANNEL
+    # <name> - player username
+    # <message> - message sent
+    chat_message: "<name>: <message>"
+
+  # The Minecraft section is for messages from Discord to Minecraft
+  # This section uses Mini Messages for formatting - legacy codes such as & or § is not supported
+  # Please see https://docs.papermc.io/adventure/minimessage/format/ for help with formatting
+  minecraft:
+    # How should the prefix from Discord display in admin chat?
+    prefix: "<dark_gray>[<blue>Discord</blue>]</dark_gray>"
+
+    # How should the server display the message from Discord?
+    # This uses the Plex's admin chat format.
+    # <message> - Message sent by the user
+    # <reply> - Shows if the user is replying to another message, must have reply enabled and reply_message
+    # configured (see below)
+    message_format: "<message><reply>"
+
+    # Should we show reply portion in the chat_message?
+    # the chat_message must include <reply>. Otherwise, it'll be omitted
+    reply: true
+
+    # How should we format the reply message portion
+    # Referenced message that is being replied to will not be included - only user
+    # <user> - User of the referenced message being replied to
+    reply_message: " <yellow>(Replying to <user>)"

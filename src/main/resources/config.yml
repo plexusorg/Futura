@@ -1,0 +1,82 @@
+# The bot section is used to configure the bot itself
+bot:
+  # To set a token for the bot, you'll need to store it as an
+  # environment variable as BOT_TOKEN for safety measure.
+  enabled: true
+
+# The chat section is used to configure webhook and channels
+chat:
+  # The type is to determine whether chat from Minecraft are to be sent as a webhook message or a channel message
+  # Valid types are WEBHOOK and CHANNEL - invalid type will default to CHANNEL
+  # If WEBHOOK is selected, you'll need to set the URL as an environment variable named WEBHOOK_URL
+  # If the webhook is deemed invalid, we'll fall back to channel via ID, then name before bailing out
+  type: "WEBHOOK"
+
+  # The defined channel ID to be used for Discord -> Minecraft chat, and if CHANNEL is defined as chat type,
+  # then this will also be used for Minecraft -> Discord chat
+  channel_id: "1234567890"
+
+  fallback_name: "minecraft-chat"
+
+# The console section is used to configure console logging to a channel
+console:
+  # Should we log console to Discord?
+  enabled: true
+
+  # The defined channel ID to be used to log console items to a channel in Discord
+  channel_id: "1234567890"
+
+  # Fallback channel in case the channel ID is no longer available
+  fallback_name: "minecraft-console"
+
+# The messages section is used to configure message template for chat, player join/quit events and more
+messages:
+  # The discord section is for messages from Minecraft to Discord
+  # This section uses Markdown for formatting
+  discord:
+    # Should the bot log when the server is online or offline?
+    online_offline_messages: true
+
+    # How should the bot send when the server is online?
+    online_message: "**The server is online**"
+
+    # How should the bot send when the server is offline?
+    offline_message: "**The server is offline**"
+
+    # Should the bot log when player joins or quits the server?
+    join_quit_messages: true
+
+    # How should the bot send the join message to Discord?
+    # <name> - player username
+    join_message: "**<name> has joined the server**"
+
+    # How should the bot send the quit message to Discord?
+    # <name> = player username
+    quit_message: "**<name> has left the server**"
+
+    # How should the bot send the chat message to Discord?
+    # This will only be applied when the chat type is set to CHANNEL
+    # <name> - player username
+    # <message> - message sent
+    chat_message: "<name>: <message>"
+
+  # The Minecraft section is for messages from Discord to Minecraft
+  # This section uses Mini Messages for formatting - legacy codes such as & or § is not supported
+  # Please see https://docs.papermc.io/adventure/minimessage/format/ for help with formatting
+  minecraft:
+    # How should the server display the message from Discord?
+    # <name> - Discord user effective name (uses global name with username as a fallback)
+    # <role> - Discord user's role (uses the highest role in hierarchy)
+    # <message> - Message sent by the user
+    # <reply> - Shows if the user is replying to another message, must have reply enabled and reply_message
+    # configured (see below)
+    chat_message: "<blue><bold>D</bold></blue> [<role>] <red><user></red>: <message><reply>"
+
+    # Should we show reply portion in the chat_message?
+    # the chat_message must include <reply>. Otherwise, it'll be omitted regardless of the status
+    reply: true
+
+    # How should we format the reply message portion
+    # Referenced message that is being replied to will not be included - only user
+    # <user> - User of the referenced message being replied to
+    reply_message: " <yellow>(Replying to <user>)"

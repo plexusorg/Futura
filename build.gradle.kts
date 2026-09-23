@@ -1,3 +1,5 @@
+import net.minecrell.pluginyml.paper.PaperPluginDescription
+
 plugins {
     id("java")
     `maven-publish`
@@ -6,7 +8,7 @@ plugins {
 }
 
 group = "dev.plex"
-version = "1.0-SNAPSHOT"
+version = "3.0-SNAPSHOT"
 description = "Futura"
 
 repositories {
@@ -19,13 +21,20 @@ repositories {
         name = "sonatype"
         url = uri("https://oss.sonatype.org/content/groups/public/")
     }
+    maven {
+        name = "telesphoreo-repo"
+        url = uri("https://nexus.telesphoreo.me/repository/plex/")
+    }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.2.build.+")
-    library("net.dv8tion:JDA:6.5.0") {
-        exclude(module = "opus-java")
-    }
+    compileOnly("dev.plex:api:2.0-SNAPSHOT")
+
+    compileOnly("org.apache.logging.log4j:log4j-api:2.25.2")
+    compileOnly("org.apache.logging.log4j:log4j-core:2.25.2")
+
+    implementation("net.dv8tion:JDA:6.5.0")
     implementation("org.bstats:bstats-base:3.2.1")
     implementation("org.bstats:bstats-bukkit:3.2.1")
 }
@@ -33,13 +42,18 @@ dependencies {
 paper {
     name = "Futura"
     version = project.version.toString()
-    main = "dev.plex.futura.Futura"
+    main = "dev.plex.futura.FuturaPlugin"
     apiVersion = "1.20"
     authors = listOf("Telesphoreo", "Taah", "NotInSync")
     description = "Discord plugin bridge for Minecraft"
     website = "https://plex.us.org"
-    loader = "dev.plex.futura.util.FuturaLibraryManager"
-    generateLibrariesJson = true
+
+    serverDependencies {
+        register("Plex") {
+            required = false
+            load = PaperPluginDescription.RelativeLoadOrder.BEFORE
+        }
+    }
 }
 
 java {
@@ -68,7 +82,8 @@ tasks {
     shadowJar {
         archiveBaseName.set("Futura")
         archiveClassifier.set("")
-        relocate("org.bstats", "dev.plex")
+        relocate("org.bstats", "dev.plex.futura.libs.bstats")
+        relocate("net.dv8tion", "dev.plex.futura.libs.jda")
     }
 }
 
