@@ -1,13 +1,16 @@
 package dev.plex.futura;
 
 import dev.plex.futura.bot.FuturaBot;
+import dev.plex.futura.cache.PlayerHeadCache;
 import dev.plex.futura.console.ConsoleBridge;
 import dev.plex.futura.console.ConsoleLogManager;
 import dev.plex.futura.integration.IntegrationManager;
 import dev.plex.futura.listener.ChatListener;
 import dev.plex.futura.listener.LifetimeListener;
+import dev.plex.futura.service.PlayerHeadService;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.IOException;
 import java.util.logging.Logger;
 
 public class FuturaPlugin extends JavaPlugin {
@@ -17,6 +20,7 @@ public class FuturaPlugin extends JavaPlugin {
     private ConsoleBridge consoleBridge;
     private ConsoleLogManager consoleLogManager;
     private IntegrationManager integrationManager;
+    private PlayerHeadService playerHeadService;
 
     private boolean logServerStatus = false;
     private String shutdownServerMessage;
@@ -60,6 +64,15 @@ public class FuturaPlugin extends JavaPlugin {
         integrationManager.load();
         integrationManager.injectBotListeners();
 
+        PlayerHeadCache playerHeadCache = new PlayerHeadCache(this);
+        try {
+            playerHeadCache.initialize();
+        } catch (IOException ex) {
+            getLogger().severe("unable to initialize player head cache: " + ex.getMessage());
+        }
+
+        playerHeadService = new PlayerHeadService(this, playerHeadCache);
+
         getLogger().info("Futura has been started.");
     }
 
@@ -96,5 +109,9 @@ public class FuturaPlugin extends JavaPlugin {
 
     public FuturaBot getBot() {
         return bot;
+    }
+
+    public PlayerHeadService getPlayerHeadService() {
+        return playerHeadService;
     }
 }

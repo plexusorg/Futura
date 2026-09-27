@@ -34,7 +34,7 @@ dependencies {
     compileOnly("org.apache.logging.log4j:log4j-api:2.25.2")
     compileOnly("org.apache.logging.log4j:log4j-core:2.25.2")
 
-    implementation("net.dv8tion:JDA:6.5.0")
+    implementation("net.dv8tion:JDA:6.7.0")
     implementation("org.bstats:bstats-base:3.2.1")
     implementation("org.bstats:bstats-bukkit:3.2.1")
 }

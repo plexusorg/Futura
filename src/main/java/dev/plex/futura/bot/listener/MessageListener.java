@@ -28,7 +28,6 @@ public class MessageListener extends AbstractDiscordListener {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        // DISCORD TO MINECRAFT CHAT
         if (event.getChannel().asTextChannel() != bot.getChatChannel() || event.getAuthor().isBot()) return;
 
         Message message = event.getMessage();

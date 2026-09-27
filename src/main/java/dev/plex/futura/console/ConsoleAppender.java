@@ -23,6 +23,7 @@ public final class ConsoleAppender extends AbstractAppender {
         }
 
         String message = getLayout().toSerializable(event).toString();
+        message = ConsoleRedactor.redact(message);
         bridge.queue(message);
     }
 }

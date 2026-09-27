@@ -5,29 +5,39 @@ import dev.plex.futura.bot.chat.ChannelDiscordChat;
 import dev.plex.futura.bot.chat.ChatType;
 import dev.plex.futura.bot.chat.DiscordChat;
 import dev.plex.futura.bot.chat.WebhookDiscordChat;
+import dev.plex.futura.bot.command.ListCommand;
+import dev.plex.futura.bot.command.SlashCommand;
 import dev.plex.futura.bot.listener.MessageListener;
+import dev.plex.futura.bot.listener.SlashCommandListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.IncomingWebhookClient;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.WebhookClient;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class FuturaBot {
 
+    private final FuturaPlugin plugin;
     private final JDA api;
     private final DiscordChat chat;
+    private final List<SlashCommand> commands = new ArrayList<>();
     private TextChannel chatChannel;
     private TextChannel consoleChannel;
 
     public FuturaBot(FuturaPlugin plugin) {
+        this.plugin = plugin;
+
         String token = System.getenv("BOT_TOKEN");
         if (token == null) {
             throw new IllegalStateException("Missing environment variable BOT_TOKEN");
@@ -35,7 +45,7 @@ public class FuturaBot {
 
         api = JDABuilder.createDefault(token)
                 .enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_MESSAGES)
-                .addEventListeners(new MessageListener(plugin, this))
+                .addEventListeners(new MessageListener(plugin, this), new SlashCommandListener(plugin, this))
                 .build();
 
         try {
@@ -96,6 +106,8 @@ public class FuturaBot {
             }
         };
 
+        registerCommands();
+
         plugin.getLogger().info("The bot has been initialized.");
     }
 
@@ -140,7 +152,19 @@ public class FuturaBot {
         return consoleChannel;
     }
 
+    public List<SlashCommand> getCommands() {
+        return commands;
+    }
+
     public void addListener(Object listener) {
         api.addEventListener(listener);
+    }
+
+    private void registerCommands() {
+        commands.add(new ListCommand(plugin));
+
+        api.getGuilds().forEach(guild -> {
+            guild.updateCommands().addCommands(commands.stream().map(SlashCommand::asCommandData).toList()).queue();
+        });
     }
 }
