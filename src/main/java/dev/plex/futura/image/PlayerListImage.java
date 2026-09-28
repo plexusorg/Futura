@@ -10,6 +10,8 @@ import java.awt.FontMetrics;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,7 +32,11 @@ public final class PlayerListImage {
     private static final int CARD_HEIGHT = 76;
     private static final int CARD_PADDING = 12;
     private static final int HEAD_SIZE = 52;
+    private static final int HEAD_RADIUS = 8;
+    private static final int SCALE = 10;
+    private static final int FOOTER_HEIGHT = 32;
 
+    private static final Font FOOTER_FONT = new Font("SansSerif", Font.PLAIN, 12);
     private static final Font TITLE_FONT = new Font("SansSerif", Font.BOLD, 24);
     private static final Font COUNT_FONT = new Font("SansSerif", Font.BOLD, 15);
     private static final Font PLAYER_FONT = new Font("SansSerif", Font.BOLD, 18);
@@ -69,12 +75,13 @@ public final class PlayerListImage {
 
     private static byte[] render(List<PlayerEntry> players, int maxPlayers) {
         int rows = (int) Math.ceil(players.size() / (double) COLUMNS);
-        int height = PADDING + HEADER_HEIGHT + (rows * CARD_HEIGHT) + (Math.max(0, rows - 1) * ROW_GAP) + PADDING;
+        int height = PADDING + HEADER_HEIGHT + (rows * CARD_HEIGHT) + (Math.max(0, rows - 1) * ROW_GAP) + FOOTER_HEIGHT + PADDING;
 
         height = Math.max(height, 180);
 
-        BufferedImage image = new BufferedImage(WIDTH, height, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(WIDTH * SCALE, height * SCALE, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
+        graphics.scale(SCALE, SCALE);
 
         try {
             configureGraphics(graphics);
@@ -86,6 +93,8 @@ public final class PlayerListImage {
             } else {
                 drawPlayers(graphics, players);
             }
+
+            drawFooter(graphics, height);
         } finally {
             graphics.dispose();
         }
@@ -101,6 +110,8 @@ public final class PlayerListImage {
     private static void configureGraphics(Graphics2D graphics) {
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
     }
 
@@ -117,7 +128,7 @@ public final class PlayerListImage {
 
         GradientPaint accent = new GradientPaint(PADDING, 0, PRIMARY, PADDING + 125, 0, ACCENT);
         graphics.setPaint(accent);
-        graphics.fillRoundRect(PADDING, 54, 180, 4, 4, 4);
+        graphics.fillRoundRect(PADDING, 54, 167, 4, 4, 4);
 
         String count = online + " / " + maximum;
         graphics.setFont(COUNT_FONT);
@@ -143,6 +154,19 @@ public final class PlayerListImage {
         graphics.drawString(count, badgeX + 28, textY);
     }
 
+    private static void drawFooter(Graphics2D graphics, int height) {
+        String text = "Powered by Futura";
+
+        graphics.setFont(FOOTER_FONT);
+        graphics.setColor(TEXT_SECONDARY);
+
+        FontMetrics metrics = graphics.getFontMetrics();
+        int x = (WIDTH - metrics.stringWidth(text)) / 2;
+        int y = height - 18;
+
+        graphics.drawString(text, x, y);
+    }
+
     private static void drawPlayers(Graphics2D graphics, List<PlayerEntry> players) {
         int availableWidth = WIDTH - (PADDING * 2);
         int cardWidth = (availableWidth - COLUMN_GAP) / COLUMNS;
@@ -159,23 +183,27 @@ public final class PlayerListImage {
             drawPlayer(graphics, player, x, y, cardWidth, accent);
         }
     }
+
     private static void drawPlayer(Graphics2D graphics, PlayerEntry player, int x, int y, int width, Color accent) {
         graphics.setColor(CARD_BACKGROUND);
         graphics.fillRoundRect(x, y, width, CARD_HEIGHT, 16, 16);
         graphics.setColor(CARD_BORDER);
         graphics.drawRoundRect(x, y, width, CARD_HEIGHT, 16, 16);
         graphics.setColor(accent);
-        graphics.fillRoundRect(x, y + 9, 4, CARD_HEIGHT - 18, 3, 3);
+
+        int accentWidth = 4;
+        int accentX = x - (accentWidth / 2);
+        graphics.fillRoundRect(accentX, y + 9, accentWidth, CARD_HEIGHT - 18, accentWidth, 4);
 
         int headX = x + CARD_PADDING + 4;
         int headY = y + ((CARD_HEIGHT - HEAD_SIZE) / 2);
 
         graphics.setColor(new Color(0, 0, 0, 60));
-        graphics.fillRoundRect(headX + 2, headY + 3, HEAD_SIZE, HEAD_SIZE, 8, 8);
+        graphics.fillRoundRect(headX + 2, headY + 3, HEAD_SIZE, HEAD_SIZE, HEAD_RADIUS, HEAD_RADIUS);
 
 
         if (player.head() != null) {
-            graphics.drawImage(player.head(), headX, headY, HEAD_SIZE, HEAD_SIZE, null);
+            graphics.drawImage(player.head(), x, y, HEAD_SIZE, HEAD_SIZE, null);
         } else {
             graphics.setColor(HEAD_FALLBACK);
             graphics.fillRoundRect(headX, headY, HEAD_SIZE, HEAD_SIZE, 8, 8);
@@ -198,20 +226,25 @@ public final class PlayerListImage {
         Font titleFont = new Font("SansSerif", Font.BOLD, 18);
         Font subtitleFont = new Font("SansSerif", Font.PLAIN, 14);
 
+        int contentTop = HEADER_HEIGHT;
+        int contentBottom = height - FOOTER_HEIGHT - PADDING;
+        int contentHeight = contentBottom - contentTop;
+        int centerY = contentTop + (contentHeight / 2);
+
         graphics.setFont(titleFont);
         graphics.setColor(TEXT_PRIMARY);
 
         FontMetrics titleMetrics = graphics.getFontMetrics();
         int titleX = (WIDTH - titleMetrics.stringWidth(title)) / 2;
-        int centerY = HEADER_HEIGHT + ((height - HEADER_HEIGHT) / 2);
 
-        graphics.drawString(title, titleX, centerY - 4);
+        graphics.drawString(title, titleX, centerY - 8);
         graphics.setFont(subtitleFont);
         graphics.setColor(TEXT_SECONDARY);
 
         FontMetrics subtitleMetrics = graphics.getFontMetrics();
+
         int subtitleX = (WIDTH - subtitleMetrics.stringWidth(subtitle)) / 2;
 
-        graphics.drawString(subtitle, subtitleX, centerY + 22);
+        graphics.drawString(subtitle, subtitleX, centerY + 18);
     }
 }

@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentMap;
 
 public class PlayerHeadService {
 
-    private static final String API_URL = "https://visage.surgeplay.com/face/64/%s.png";
+    private static final String API_URL = "https://visage.surgeplay.com/face/128/%s.png";
     private final FuturaPlugin plugin;
     private final HttpClient client;
     private final PlayerHeadCache playerHeadCache;
