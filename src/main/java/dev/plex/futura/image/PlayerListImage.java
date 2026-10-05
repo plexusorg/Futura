@@ -6,18 +6,21 @@ import org.bukkit.entity.Player;
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.FontMetrics;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.TexturePaint;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,13 +36,17 @@ public final class PlayerListImage {
     private static final int CARD_PADDING = 12;
     private static final int HEAD_SIZE = 52;
     private static final int HEAD_RADIUS = 8;
-    private static final int SCALE = 10;
+    private static final int SCALE = 2;
     private static final int FOOTER_HEIGHT = 32;
 
-    private static final Font FOOTER_FONT = new Font("SansSerif", Font.PLAIN, 12);
-    private static final Font TITLE_FONT = new Font("SansSerif", Font.BOLD, 24);
-    private static final Font COUNT_FONT = new Font("SansSerif", Font.BOLD, 15);
-    private static final Font PLAYER_FONT = new Font("SansSerif", Font.BOLD, 18);
+    private static final Font REGULAR_FONT = loadFont("Inter-Regular.ttf");
+    private static final Font BOLD_FONT = loadFont("Inter-Bold.ttf");
+    private static final Font FOOTER_FONT = REGULAR_FONT.deriveFont(12f);
+    private static final Font TITLE_FONT = BOLD_FONT.deriveFont(24f);
+    private static final Font COUNT_FONT = BOLD_FONT.deriveFont(15f);
+    private static final Font PLAYER_FONT = BOLD_FONT.deriveFont(18f);
+    private static final Font EMPTY_TITLE_FONT = BOLD_FONT.deriveFont(18f);
+    private static final Font EMPTY_SUBTITLE_FONT = REGULAR_FONT.deriveFont(14f);
 
     private static final Color BACKGROUND_TOP = new Color(24, 26, 38);
     private static final Color BACKGROUND_BOTTOM = new Color(31, 35, 52);
@@ -53,6 +60,14 @@ public final class PlayerListImage {
     private static final Color HEAD_FALLBACK = new Color(65, 67, 74);
 
     private record PlayerEntry(UUID uuid, String name, BufferedImage head) {
+    }
+
+    private static Font loadFont(String name) {
+        try (InputStream input = Objects.requireNonNull(PlayerListImage.class.getResourceAsStream("/fonts/" + name), "Missing font " + name)) {
+            return Font.createFont(Font.TRUETYPE_FONT, input);
+        } catch (IOException | FontFormatException e) {
+            throw new IllegalStateException("Failed to load font " + name, e);
+        }
     }
 
     public static CompletableFuture<byte[]> generate(PlayerHeadService service, Collection<? extends Player> onlinePlayers, int maxPlayers) {
@@ -75,7 +90,7 @@ public final class PlayerListImage {
 
     private static byte[] render(List<PlayerEntry> players, int maxPlayers) {
         int rows = (int) Math.ceil(players.size() / (double) COLUMNS);
-        int height = PADDING + HEADER_HEIGHT + (rows * CARD_HEIGHT) + (Math.max(0, rows - 1) * ROW_GAP) + FOOTER_HEIGHT + PADDING;
+        int height = HEADER_HEIGHT + (rows * CARD_HEIGHT) + (Math.max(0, rows - 1) * ROW_GAP) + FOOTER_HEIGHT + PADDING;
 
         height = Math.max(height, 180);
 
@@ -111,6 +126,7 @@ public final class PlayerListImage {
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
         graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
     }
@@ -202,14 +218,11 @@ public final class PlayerListImage {
         graphics.fillRoundRect(headX + 2, headY + 3, HEAD_SIZE, HEAD_SIZE, HEAD_RADIUS, HEAD_RADIUS);
 
         if (player.head() != null) {
-            Shape previousClip = graphics.getClip();
-            graphics.clip(new RoundRectangle2D.Float(headX, headY, HEAD_SIZE, HEAD_SIZE, HEAD_RADIUS, HEAD_RADIUS));
-            graphics.drawImage(player.head(), headX, headY, HEAD_SIZE, HEAD_SIZE, null);
-            graphics.setClip(previousClip);
+            graphics.setPaint(new TexturePaint(player.head(), new Rectangle2D.Float(headX, headY, HEAD_SIZE, HEAD_SIZE)));
         } else {
             graphics.setColor(HEAD_FALLBACK);
-            graphics.fillRoundRect(headX, headY, HEAD_SIZE, HEAD_SIZE, HEAD_RADIUS, HEAD_RADIUS);
         }
+        graphics.fillRoundRect(headX, headY, HEAD_SIZE, HEAD_SIZE, HEAD_RADIUS, HEAD_RADIUS);
 
         graphics.setFont(PLAYER_FONT);
         graphics.setColor(TEXT_PRIMARY);
@@ -218,29 +231,40 @@ public final class PlayerListImage {
         int textX = headX + HEAD_SIZE + 16;
         int textY = y + ((CARD_HEIGHT - metrics.getHeight()) / 2) + metrics.getAscent();
 
-        graphics.drawString(player.name(), textX, textY);
+        graphics.drawString(fitText(metrics, player.name(), x + width - CARD_PADDING - textX), textX, textY);
+    }
+
+    private static String fitText(FontMetrics metrics, String text, int maxWidth) {
+        if (metrics.stringWidth(text) <= maxWidth) {
+            return text;
+        }
+
+        String ellipsis = "…";
+        int end = text.length();
+        while (end > 0 && metrics.stringWidth(text.substring(0, end) + ellipsis) > maxWidth) {
+            end--;
+        }
+
+        return text.substring(0, end) + ellipsis;
     }
 
     private static void drawEmpty(Graphics2D graphics, int height) {
         String title = "Nobody is online";
         String subtitle = "The server is feeling a little quiet.";
 
-        Font titleFont = new Font("SansSerif", Font.BOLD, 18);
-        Font subtitleFont = new Font("SansSerif", Font.PLAIN, 14);
-
         int contentTop = HEADER_HEIGHT;
         int contentBottom = height - FOOTER_HEIGHT - PADDING;
         int contentHeight = contentBottom - contentTop;
         int centerY = contentTop + (contentHeight / 2);
 
-        graphics.setFont(titleFont);
+        graphics.setFont(EMPTY_TITLE_FONT);
         graphics.setColor(TEXT_PRIMARY);
 
         FontMetrics titleMetrics = graphics.getFontMetrics();
         int titleX = (WIDTH - titleMetrics.stringWidth(title)) / 2;
 
         graphics.drawString(title, titleX, centerY - 8);
-        graphics.setFont(subtitleFont);
+        graphics.setFont(EMPTY_SUBTITLE_FONT);
         graphics.setColor(TEXT_SECONDARY);
 
         FontMetrics subtitleMetrics = graphics.getFontMetrics();
