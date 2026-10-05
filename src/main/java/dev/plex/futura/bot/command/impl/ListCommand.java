@@ -1,14 +1,14 @@
-package dev.plex.futura.bot.command;
+package dev.plex.futura.bot.command.impl;
 
 import dev.plex.futura.FuturaPlugin;
+import dev.plex.futura.bot.command.CommandContext;
+import dev.plex.futura.bot.command.SlashCommand;
 import dev.plex.futura.image.PlayerListImage;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.MetadataValue;
 
-import java.io.IOException;
 import java.util.List;
 
 public class ListCommand extends SlashCommand {
@@ -21,15 +21,15 @@ public class ListCommand extends SlashCommand {
     }
 
     @Override
-    public void execute(SlashCommandInteractionEvent event) {
-        event.deferReply().queue();
+    public void execute(CommandContext context) {
+        context.defer();
 
         List<? extends Player> players = plugin.getServer().getOnlinePlayers().stream().filter(player -> !isVanished(player)).toList();
         int maxSize = plugin.getServer().getMaxPlayers();
 
         PlayerListImage.generate(plugin.getPlayerHeadService(), players, maxSize)
                 .thenAccept(image -> {
-                    event.getHook().sendFiles(FileUpload.fromData(image, "players.png")).queue();
+                    context.event().getHook().sendFiles(FileUpload.fromData(image, "players.png")).queue();
                 })
                 .exceptionally(error -> {
                     plugin.getLogger().severe("Unable to generate an image: " + error.getMessage());
@@ -44,7 +44,7 @@ public class ListCommand extends SlashCommand {
                         embed.setDescription("`" + String.join("`, `", names) + "`");
                     }
 
-                    event.getHook().sendMessageEmbeds(embed.build()).queue();
+                    context.event().getHook().sendMessageEmbeds(embed.build()).queue();
                     return null;
                 });
     }

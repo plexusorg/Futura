@@ -5,8 +5,9 @@ import dev.plex.futura.bot.chat.ChannelDiscordChat;
 import dev.plex.futura.bot.chat.ChatType;
 import dev.plex.futura.bot.chat.DiscordChat;
 import dev.plex.futura.bot.chat.WebhookDiscordChat;
-import dev.plex.futura.bot.command.ListCommand;
+import dev.plex.futura.bot.command.impl.ListCommand;
 import dev.plex.futura.bot.command.SlashCommand;
+import dev.plex.futura.bot.command.impl.PurgeCommand;
 import dev.plex.futura.bot.listener.MessageListener;
 import dev.plex.futura.bot.listener.SlashCommandListener;
 import net.dv8tion.jda.api.JDA;
@@ -15,8 +16,6 @@ import net.dv8tion.jda.api.entities.IncomingWebhookClient;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.WebhookClient;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +31,7 @@ public class FuturaBot {
     private final JDA api;
     private final DiscordChat chat;
     private final List<SlashCommand> commands = new ArrayList<>();
+    private ChatType chatType;
     private TextChannel chatChannel;
     private TextChannel consoleChannel;
 
@@ -84,7 +84,6 @@ public class FuturaBot {
             }
         }
 
-        ChatType chatType;
         try {
             chatType = ChatType.valueOf(plugin.getConfig().getString("chat.type", "CHANNEL").toUpperCase());
         } catch (Exception ignored) {
@@ -144,6 +143,10 @@ public class FuturaBot {
         return chat;
     }
 
+    public ChatType getChatType() {
+        return chatType;
+    }
+
     public TextChannel getChatChannel() {
         return chatChannel;
     }
@@ -162,9 +165,10 @@ public class FuturaBot {
 
     private void registerCommands() {
         commands.add(new ListCommand(plugin));
+        commands.add(new PurgeCommand(this));
 
         api.getGuilds().forEach(guild -> {
-            guild.updateCommands().addCommands(commands.stream().map(SlashCommand::asCommandData).toList()).queue();
+            guild.updateCommands().addCommands(commands.stream().map(SlashCommand::buildCommandData).toList()).queue();
         });
     }
 }
