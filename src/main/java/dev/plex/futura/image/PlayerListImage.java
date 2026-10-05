@@ -201,12 +201,14 @@ public final class PlayerListImage {
         graphics.setColor(new Color(0, 0, 0, 60));
         graphics.fillRoundRect(headX + 2, headY + 3, HEAD_SIZE, HEAD_SIZE, HEAD_RADIUS, HEAD_RADIUS);
 
-
         if (player.head() != null) {
-            graphics.drawImage(player.head(), x, y, HEAD_SIZE, HEAD_SIZE, null);
+            Shape previousClip = graphics.getClip();
+            graphics.clip(new RoundRectangle2D.Float(headX, headY, HEAD_SIZE, HEAD_SIZE, HEAD_RADIUS, HEAD_RADIUS));
+            graphics.drawImage(player.head(), headX, headY, HEAD_SIZE, HEAD_SIZE, null);
+            graphics.setClip(previousClip);
         } else {
             graphics.setColor(HEAD_FALLBACK);
-            graphics.fillRoundRect(headX, headY, HEAD_SIZE, HEAD_SIZE, 8, 8);
+            graphics.fillRoundRect(headX, headY, HEAD_SIZE, HEAD_SIZE, HEAD_RADIUS, HEAD_RADIUS);
         }
 
         graphics.setFont(PLAYER_FONT);
