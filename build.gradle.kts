@@ -23,7 +23,7 @@ repositories {
     }
     maven {
         name = "telesphoreo-repo"
-        url = uri("https://nexus.telesphoreo.me/repository/plex/")
+        url = uri("https://telesphorepo.com/maven/plex/")
     }
 }
 
